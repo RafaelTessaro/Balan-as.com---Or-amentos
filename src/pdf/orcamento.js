@@ -49,8 +49,8 @@ const num = (v) => {
   return Number.isFinite(n) ? n : 0;
 };
 const centavos = (v) => Math.round(num(v) * 100) / 100;
-const moeda = (v) => FMT_MOEDA.format(centavos(v)).replace(/[  ]/g, ' ');
-const quantidade = (v) => FMT_QTD.format(num(v)).replace(/[  ]/g, ' ');
+const moeda = (v) => FMT_MOEDA.format(centavos(v)).replace(/[\u00A0\u202F]/g, ' ');
+const quantidade = (v) => FMT_QTD.format(num(v)).replace(/[\u00A0\u202F]/g, ' ');
 const texto = (v) => (v === null || v === undefined ? '' : String(v).trim());
 const doisDigitos = (n) => String(n).padStart(2, '0');
 

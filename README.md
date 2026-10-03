@@ -12,16 +12,41 @@ O sistema substitui a planilha `Checklist_Tecnico_Orcamento_revisado.xlsm`. Os i
 
 ---
 
-## Instalação no Windows (uma vez só)
+## Instalação no Windows (sem instalar nada)
 
-1. Instale o **Node.js versão LTS** (22 ou mais nova): https://nodejs.org/pt-br/download. É só clicar em "Avançar" até o fim.
-2. Copie a pasta do sistema para o computador, por exemplo `C:\BalancasOrcamentos`.
-3. Dê dois cliques em **`iniciar.bat`**.
-   - Na primeira vez o sistema baixa os componentes de que precisa, o que leva cerca de 1 minuto e exige internet.
-   - O navegador abre sozinho em **http://localhost:3000**.
-4. Deixe a janela preta aberta enquanto usa o sistema. Para encerrar, feche essa janela.
+Use o **pacote completo** `BalancasOrcamentos-windows.zip`. Ele já traz:
 
-> Dica: crie um atalho do `iniciar.bat` na Área de Trabalho, com o nome "Orçamentos".
+- o sistema;
+- os componentes;
+- o Node.js portátil oficial, sem alterações.
+
+Não precisa instalar nem baixar mais nada.
+
+1. Clique com o botão direito no `.zip` e escolha **"Extrair tudo..."**. Use uma pasta fixa, por exemplo `C:\BalancasOrcamentos`.
+2. Dê dois cliques em **`iniciar.bat`**. Se o Windows mostrar um aviso de segurança, clique em "Mais informações" e depois em "Executar assim mesmo".
+3. O navegador abre sozinho em **http://localhost:3000**. Deixe a janela preta aberta enquanto usa o sistema.
+
+Na primeira vez, o atalho **"Orcamentos BALANCAS.COM"** é criado na Área de Trabalho.
+
+Requisitos e atualização:
+
+- Funciona no Windows 10 e 11 de 64 bits.
+- Para atualizar, extraia a versão nova por cima da pasta antiga. A pasta `dados` é mantida.
+
+Como gerar o pacote (para quem mantém o sistema, em Linux/macOS com git, npm, curl, zip e unzip):
+
+```bash
+npm run empacotar      # gera dist/BalancasOrcamentos-windows.zip
+```
+
+O script usa a última versão commitada e instala só os componentes de produção. Ele também baixa o `node.exe` oficial de nodejs.org e confere a soma SHA-256 publicada.
+
+### Alternativa: cópia do GitHub (com Node.js instalado)
+
+1. Instale o **Node.js LTS** (22 ou mais novo): https://nodejs.org/pt-br/download
+2. Baixe o código e dê dois cliques em `iniciar.bat`.
+
+Na primeira vez, os componentes são baixados da internet.
 
 ### Usar em tablets e em outros computadores da oficina
 

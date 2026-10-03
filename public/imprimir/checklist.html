@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Checklist técnico · BALANÇAS.COM</title>
+    <link rel="icon" href="/img/logo-simbolo.png" />
+    <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/imprimir/checklist.css" />
+  </head>
+  <body>
+    <!-- Barra de ações: aparece só na tela (oculta na impressão). -->
+    <div class="barra" role="toolbar" aria-label="Ações da impressão">
+      <button type="button" class="btn" id="btn-fechar" title="Fechar esta janela">
+        <span data-icone="x"></span><span>Fechar</span>
+      </button>
+      <div class="barra-info">
+        <strong id="barra-titulo">Checklist técnico</strong>
+        <span>Para melhor resultado, desative “Cabeçalhos e rodapés” na janela de impressão.</span>
+      </div>
+      <button type="button" class="btn btn-primario" id="btn-imprimir" disabled>
+        <span data-icone="printer"></span><span>Imprimir</span>
+      </button>
+    </div>
+
+    <main class="mesa">
+      <div class="folha" id="folha">
+        <div class="pagina" id="pagina" aria-busy="true">
+          <div class="aviso">Carregando…</div>
+        </div>
+      </div>
+    </main>
+
+    <script type="module" src="/imprimir/checklist.js"></script>
+  </body>
+</html>

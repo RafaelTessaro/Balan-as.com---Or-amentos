@@ -1,0 +1,917 @@
+/* ==========================================================================
+   BALANÇAS.COM — Checklist técnico em A4 (uma folha)
+   Página de impressão: preenchida a partir da OS ou em branco.
+   Todas as medidas da folha em mm/pt; na tela aparece como prévia da impressão.
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/inter-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 10mm;
+}
+
+:root {
+  /* Marca */
+  --verde: #08a951;
+  --cinza-marca: #5a5b5d;
+  --cinza-claro: #eff1f0;
+  --verde-claro: #f2f8f4;
+
+  /* Texto e linhas */
+  --texto: #454648;
+  --tinta: #1d1e20;
+  --suave: #6b6d70;
+  --borda: #9da29f;
+  --borda-fraca: #c9cdcb;
+  --b: 0.2mm solid var(--borda);
+  --fonte: 'Inter', Arial, Helvetica, sans-serif;
+
+  /* Dimensões ajustadas pelo checklist.js para caber em uma folha */
+  --altura-util: 276mm;
+  --h-cab: 17mm;
+  --h-campo: 7mm; /* linha de preenchimento (≥ 7 mm para escrita à mão) */
+  --h-linha: 7mm;
+  --h-titulo: 6mm;
+  --h-ck: 6.2mm; /* linha do checklist funcional */
+  --cx: 3.8mm; /* quadrado de marcação */
+  --cx-o: 3.2mm; /* quadrado das opções (acessórios, tensão, situação) */
+  --gap: 2.2mm;
+  --rotulo: 31mm;
+  --valor-dir: 52mm;
+  --min-el: 21mm;
+
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--fonte);
+  color: var(--texto);
+  background: #dfe2e0;
+  font-size: 8pt;
+  line-height: 1.25;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+/* --------------------------------------------------------------------------
+   Barra de ações (somente tela)
+   -------------------------------------------------------------------------- */
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px;
+  background: #fff;
+  border-bottom: 1px solid #d7dbd9;
+  box-shadow: 0 1px 3px rgba(20, 24, 22, 0.06);
+  font-size: 14px;
+  line-height: 1.35;
+}
+.barra-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.barra-info strong {
+  font-size: 15px;
+  font-weight: 650;
+  color: #2f3032;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.barra-info span {
+  font-size: 12.5px;
+  color: var(--suave);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #cfd4d1;
+  border-radius: 6px;
+  background: #fff;
+  color: #2f3032;
+  font: inherit;
+  font-weight: 560;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+.btn:hover {
+  background: #f8f9f8;
+  border-color: #bcc3bf;
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(8, 169, 81, 0.28);
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+.btn-primario {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: #fff;
+}
+.btn-primario:hover {
+  background: #07964a;
+  border-color: #07964a;
+}
+.btn .i {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.btn [data-icone] {
+  display: inline-flex;
+}
+
+@media (max-width: 640px) {
+  .barra {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .barra-info span {
+    display: none;
+  }
+  .btn {
+    padding: 0 12px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Prévia na tela: folha A4 centralizada sobre fundo cinza
+   -------------------------------------------------------------------------- */
+.mesa {
+  display: flex;
+  justify-content: center;
+  padding: 28px 16px 56px;
+}
+.folha {
+  flex: none;
+  width: 210mm;
+  height: 297mm;
+  padding: 10mm;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 24, 22, 0.08), 0 10px 32px rgba(20, 24, 22, 0.16);
+}
+
+/* --------------------------------------------------------------------------
+   Página (área útil: 190 × 276 mm)
+   -------------------------------------------------------------------------- */
+.pagina {
+  width: 190mm;
+  height: var(--altura-util);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+}
+.pagina > * {
+  flex: none;
+}
+/* Modo de medição: altura natural do conteúdo (usado pelo ajuste automático). */
+.pagina.medindo {
+  height: auto;
+  overflow: visible;
+}
+.pagina.medindo .s3 {
+  flex: none;
+}
+.pagina.medindo .elastico {
+  flex: none;
+  height: var(--min-el);
+}
+
+.aviso {
+  margin: auto;
+  text-align: center;
+  font-size: 11pt;
+  color: var(--suave);
+  max-width: 120mm;
+  line-height: 1.5;
+}
+.aviso strong {
+  display: block;
+  color: var(--tinta);
+  font-size: 13pt;
+  margin-bottom: 2mm;
+}
+
+/* --------------------------------------------------------------------------
+   Cabeçalho
+   -------------------------------------------------------------------------- */
+.cab {
+  display: grid;
+  grid-template-columns: 58mm 1fr 42mm;
+  align-items: stretch;
+  gap: 3mm;
+  height: var(--h-cab);
+  padding-bottom: 1.6mm;
+  border-bottom: 0.7mm solid var(--cinza-marca);
+  position: relative;
+}
+.cab::after {
+  /* Detalhe verde da marca sobre o filete cinza */
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.7mm;
+  width: 24mm;
+  height: 0.7mm;
+  background: var(--verde);
+}
+.cab-marca {
+  display: flex;
+  align-items: center;
+  gap: 2.4mm;
+  min-width: 0;
+}
+.cab-marca img {
+  width: 12.5mm;
+  height: 12.5mm;
+  flex: none;
+}
+.cab-empresa {
+  font-size: 10.5pt;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--texto);
+  line-height: 1.1;
+}
+.cab-sub,
+.cab-contato {
+  font-size: 6.8pt;
+  color: var(--suave);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.cab-sub {
+  font-weight: 600;
+}
+.cab-titulo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+}
+.cab-titulo h1 {
+  margin: 0;
+  font-size: 17pt;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  line-height: 1.05;
+  color: var(--texto);
+  white-space: nowrap;
+}
+.cab-titulo p {
+  margin: 1mm 0 0;
+  font-size: 7.6pt;
+  font-weight: 500;
+  color: var(--suave);
+  letter-spacing: 0.02em;
+}
+.cab-os {
+  display: flex;
+  flex-direction: column;
+  border: 0.3mm solid var(--cinza-marca);
+  border-radius: 1.2mm;
+  overflow: hidden;
+}
+.cab-os-rotulo {
+  background: var(--cinza-marca);
+  color: #fff;
+  font-size: 6.3pt;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-align: center;
+  padding: 0.9mm 0;
+  line-height: 1.2;
+}
+.cab-os-num {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2mm;
+  padding: 0 3mm;
+}
+.cab-os-num span {
+  font-size: 8pt;
+  font-weight: 700;
+  color: var(--texto);
+}
+.cab-os-num strong {
+  flex: 1;
+  text-align: center;
+  font-size: 18pt;
+  font-weight: 800;
+  color: var(--tinta);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Grades de campos (rótulo + valor)
+   -------------------------------------------------------------------------- */
+.grade {
+  display: grid;
+  border-left: var(--b);
+}
+.grade > * {
+  border-right: var(--b);
+  border-bottom: var(--b);
+  min-width: 0;
+}
+.grade.solta,
+.secao-titulo + .grade {
+  border-top: var(--b);
+}
+.grade-4 {
+  grid-template-columns: var(--rotulo) 1fr var(--rotulo) var(--valor-dir);
+}
+.grade-2 {
+  grid-template-columns: var(--rotulo) 1fr;
+}
+.grade-data {
+  grid-template-columns: var(--rotulo) 40mm 22mm 1fr;
+  margin-top: var(--gap);
+}
+
+/* Rótulo */
+.r {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: var(--h-campo);
+  padding: 0.5mm 1.8mm;
+  background: var(--verde-claro);
+  font-size: 6.2pt;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  line-height: 1.18;
+  color: var(--texto);
+}
+.r small {
+  display: block;
+  margin-top: 0.3mm;
+  font-size: 5.5pt;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--suave);
+}
+.r.topo {
+  justify-content: flex-start;
+  padding-top: 1.5mm;
+}
+.r-span2 {
+  grid-row: span 2;
+}
+.span3 {
+  grid-column: span 3;
+}
+
+/* Valor de uma linha */
+.v {
+  display: flex;
+  align-items: center;
+  gap: 1.6mm;
+  height: var(--h-campo);
+  padding: 0 1.8mm;
+  font-size: 8.6pt;
+  font-weight: 500;
+  color: var(--tinta);
+  overflow: hidden;
+}
+.v .t {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.v .t.forte {
+  font-weight: 650;
+}
+.v .extra {
+  flex: none;
+  font-size: 6.8pt;
+  font-weight: 500;
+  color: var(--suave);
+  white-space: nowrap;
+}
+.v .num {
+  flex: none;
+  font-size: 7pt;
+  font-weight: 700;
+  color: var(--suave);
+}
+.v.lacre {
+  gap: 1.2mm;
+}
+
+/* Guia de data em branco: __ / __ / ____ */
+.guia-data {
+  display: inline-flex;
+  align-items: center;
+  color: #a9adab;
+  font-weight: 400;
+  font-size: 9pt;
+}
+.guia-data i {
+  display: inline-block;
+  width: 7.5mm;
+}
+.guia-data i:last-child {
+  width: 11mm;
+}
+
+/* Bloco de várias linhas (altura fixa = n linhas de escrita) */
+.bloco {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+.bloco .conteudo {
+  padding: 1.1mm 1.8mm 0.8mm;
+  font-size: 8.4pt;
+  font-weight: 500;
+  line-height: 1.32;
+  color: var(--tinta);
+  overflow-wrap: anywhere;
+}
+.bloco .conteudo p {
+  margin: 0;
+  white-space: pre-line;
+}
+.bloco .vazio {
+  color: var(--suave);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Linhas de escrita (versão em branco) */
+.linhas {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0 1.8mm;
+}
+.linhas > i {
+  flex: 1 1 0;
+  min-height: var(--h-linha);
+  border-bottom: 0.15mm solid var(--borda-fraca);
+}
+.linhas > i:last-child {
+  border-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Seções
+   -------------------------------------------------------------------------- */
+.secao {
+  margin-top: var(--gap);
+}
+.secao-titulo {
+  display: flex;
+  align-items: stretch;
+  height: var(--h-titulo);
+  background: var(--cinza-claro);
+  border: var(--b);
+  border-bottom: 0;
+}
+.secao-titulo .n {
+  flex: none;
+  width: var(--h-titulo);
+  display: grid;
+  place-items: center;
+  background: var(--verde);
+  color: #fff;
+  font-size: 9pt;
+  font-weight: 800;
+  margin: -0.2mm 0 0 -0.2mm; /* cobre a borda superior/esquerda */
+  height: calc(var(--h-titulo) + 0.2mm);
+}
+.secao-titulo h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 2.4mm;
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--texto);
+  white-space: nowrap;
+}
+
+/* Quadrados de marcação (desenhados em CSS/SVG — imprimem sempre) */
+.cx {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--cx);
+  height: var(--cx);
+  border: 0.3mm solid #47484a;
+  border-radius: 0.5mm;
+  background: #fff;
+  vertical-align: middle;
+}
+.cx svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--tinta);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+.cx-o {
+  width: var(--cx-o);
+  height: var(--cx-o);
+}
+.cx-mini {
+  width: 2.7mm;
+  height: 2.7mm;
+  border-width: 0.25mm;
+}
+
+/* Opções com quadrado (acessórios, tensão, situação) */
+.opcoes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 3.4mm;
+  row-gap: 0.4mm;
+  height: auto;
+  min-height: var(--h-campo);
+  padding: 0.6mm 1.8mm;
+  font-size: 7.8pt;
+}
+.opcao {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.1mm;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--tinta);
+}
+.opcao.marcada > span:last-child {
+  font-weight: 700;
+}
+.outros {
+  flex: 1 1 32mm;
+  display: flex;
+  align-items: center;
+  gap: 1.2mm;
+  min-width: 32mm;
+  white-space: nowrap;
+}
+.outros > span:first-child {
+  font-weight: 600;
+  color: var(--texto);
+}
+.outros .linha {
+  flex: 1;
+  min-width: 0;
+  border-bottom: 0.2mm solid var(--borda);
+  padding: 0 0.6mm 0.2mm;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  min-height: 3.8mm;
+}
+.situacao-atual {
+  margin-left: auto;
+  font-size: 6.4pt;
+  color: var(--suave);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Checklist funcional
+   -------------------------------------------------------------------------- */
+.ck {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.ck th,
+.ck td {
+  border: var(--b);
+  padding: 0;
+}
+.ck col.c-n {
+  width: 6.5mm;
+}
+.ck col.c-m {
+  width: 9.2mm;
+}
+.ck thead th {
+  font-size: 6.2pt;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--texto);
+}
+.ck .h1 th {
+  height: 4.6mm;
+}
+.ck .h1 th.grupo {
+  background: var(--cinza-marca);
+  color: #fff;
+  border-color: var(--cinza-marca);
+}
+.ck .h1 th.item,
+.ck .h1 th.n {
+  background: var(--cinza-claro);
+}
+.ck .h1 th.item {
+  text-align: left;
+  padding-left: 2mm;
+}
+.ck .h2 th {
+  height: 4mm;
+  background: var(--verde-claro);
+  font-size: 6.4pt;
+}
+.ck tbody tr {
+  height: var(--h-ck);
+}
+.ck tbody td {
+  text-align: center;
+  vertical-align: middle;
+}
+.ck tbody tr:nth-child(even) td {
+  background: #f7f8f7;
+}
+.ck td.n {
+  font-size: 6.4pt;
+  font-weight: 600;
+  color: var(--suave);
+}
+.ck td.item {
+  text-align: left;
+  padding: 0 2mm;
+  font-size: 7.9pt;
+  font-weight: 500;
+  color: var(--tinta);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ck td.m {
+  line-height: 0;
+}
+.ck .sep {
+  border-left: 0.45mm solid var(--cinza-marca);
+}
+
+/* Legenda */
+.legenda {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 3mm;
+  row-gap: 0.3mm;
+  min-height: 5mm;
+  padding: 0.5mm 2mm;
+  background: var(--cinza-claro);
+  border: var(--b);
+  border-top: 0;
+  font-size: 6.4pt;
+  color: var(--texto);
+}
+.legenda b {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.legenda .item-leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 1mm;
+  white-space: nowrap;
+}
+.legenda .divisor {
+  color: var(--borda);
+}
+.legenda .nota {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Detalhes das não conformidades */
+.lista-nc {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lista-nc.colunas {
+  columns: 2;
+  column-gap: 5mm;
+}
+.lista-nc li {
+  break-inside: avoid;
+}
+.lista-nc li b {
+  font-weight: 650;
+}
+.lista-nc .mais {
+  color: var(--suave);
+  font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   Seção 3 (absorve o espaço restante da folha)
+   -------------------------------------------------------------------------- */
+.s3 {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.s3 > * {
+  flex: none;
+}
+.s3 > .elastico {
+  flex: 1 1 var(--min-el);
+  min-height: 0;
+}
+
+/* Itens da OS (serviços e peças, sem valores) */
+.itens-os {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 5mm;
+  margin-top: 1mm;
+  padding-top: 0.9mm;
+  border-top: 0.15mm dashed var(--borda-fraca);
+}
+.itens-os.duas {
+  grid-template-columns: 1fr 1fr;
+}
+.itens-os:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.grupo-t {
+  font-size: 0.74em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--suave);
+  margin-bottom: 0.2mm;
+}
+.itens-os ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.itens-os li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.itens-os li b {
+  display: inline-block;
+  min-width: 6mm;
+  font-weight: 700;
+  color: var(--texto);
+}
+.itens-os li.mais {
+  color: var(--suave);
+  font-style: italic;
+}
+
+/* Assinaturas */
+.assinaturas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 14mm;
+  padding: 0 6mm;
+}
+.ass {
+  padding-top: 8.5mm;
+  text-align: center;
+}
+.ass .linha-ass {
+  border-top: 0.25mm solid var(--tinta);
+}
+.ass .leg {
+  margin-top: 0.7mm;
+  font-size: 6.4pt;
+  font-weight: 600;
+  color: var(--texto);
+}
+.ass .nome {
+  font-size: 6.2pt;
+  color: var(--suave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Rodapé */
+.rodape {
+  display: flex;
+  justify-content: space-between;
+  gap: 4mm;
+  margin-top: 1.6mm;
+  padding-top: 1mm;
+  border-top: 0.2mm solid var(--borda-fraca);
+  font-size: 6pt;
+  color: var(--suave);
+  white-space: nowrap;
+}
+.rodape > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Modo compacto (muitos itens no checklist) */
+.pagina.compacta {
+  --gap: 1.4mm;
+  --h-titulo: 5.2mm;
+  --h-cab: 15.5mm;
+}
+.pagina.compacta .ass {
+  padding-top: 7.5mm;
+}
+
+/* --------------------------------------------------------------------------
+   Impressão
+   -------------------------------------------------------------------------- */
+@media print {
+  html,
+  body {
+    background: #fff;
+  }
+  .barra {
+    display: none !important;
+  }
+  .mesa {
+    display: block;
+    padding: 0;
+  }
+  .folha {
+    width: auto;
+    height: auto;
+    padding: 0;
+    box-shadow: none;
+    zoom: 1 !important;
+    break-inside: avoid;
+  }
+}

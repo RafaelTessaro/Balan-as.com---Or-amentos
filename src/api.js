@@ -8,6 +8,7 @@ const imagens = require('./imagens');
 const email = require('./email');
 const modelos = require('./modelos');
 const { gerarOrcamentoPdf } = require('./pdf/orcamento');
+const { consultarCNPJ } = require('./cnpj');
 
 const api = express.Router();
 
@@ -69,6 +70,14 @@ api.post(
 );
 
 // ---------------------------------------------------------------------------
+// Consulta de CNPJ (preenche razão social e cidade no cadastro de clientes)
+// ---------------------------------------------------------------------------
+api.get(
+  '/cnpj/:cnpj',
+  rota(async (req, res) => res.json(await consultarCNPJ(req.params.cnpj)))
+);
+
+// ---------------------------------------------------------------------------
 // Painel
 // ---------------------------------------------------------------------------
 api.get('/resumo', (req, res) => res.json(ordens.resumo()));
@@ -126,7 +135,8 @@ async function pdfDaOrdem(id) {
   const o = ordens.obter(id);
   if (!o) return null;
   const cfg = lerConfig();
-  const buffer = await gerarOrcamentoPdf(o, cfg, {
+  const paraPdf = { ...o, numero: ordens.identificacao(o).replace(' (interno)', '') };
+  const buffer = await gerarOrcamentoPdf(paraPdf, cfg, {
     cabecalho: imagens.caminho('cabecalho'),
     rodape: imagens.caminho('rodape'),
   });

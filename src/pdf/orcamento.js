@@ -568,11 +568,11 @@ function blocoClienteEquipamento(ordem) {
   const c = ordem.cliente || null;
   const cliente = listaInfo([
     ['Nome', ordem.cliente_nome || (c && c.nome), { bold: true, color: COR.grafite }],
-    ['CPF/CNPJ', ordem.cliente_documento || (c && c.documento)],
-    ['Telefone', juntar([ordem.cliente_telefone, c && c.telefone, c && c.whatsapp], ' / ', 2)],
-    ['E-mail', ordem.cliente_email || (c && c.email)],
-    ['Endereço', c && c.endereco],
-    ['Cidade', c && c.cidade],
+    [
+      (ordem.cliente_tipo || (c && c.tipo)) === 'PF' ? 'CPF' : (ordem.cliente_tipo || (c && c.tipo)) === 'PJ' ? 'CNPJ' : 'CPF/CNPJ',
+      ordem.cliente_documento || (c && c.documento),
+    ],
+    ['Cidade', ordem.cliente_cidade || (c && c.cidade)],
   ]);
 
   const entrada = texto(ordem.tensao_entrada);

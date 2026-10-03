@@ -52,7 +52,7 @@ export async function montar(el) {
         <tbody>${r.recentes
           .map(
             (o) => `<tr data-id="${o.id}">
-              <td class="num-os">${o.numero}</td>
+              <td class="num-os">${o.numero_os ? esc(o.numero_os) : '<span class="texto-fraco" title="Nº da OS ainda não informado">—</span>'}</td>
               <td><span class="destaque">${esc(o.cliente_nome || 'Cliente não informado')}</span><span class="secundario">${esc(
                 o.equipamento || '—'
               )} · ${esc(tempoRelativo(o.atualizado_em))}</span></td>

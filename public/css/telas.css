@@ -235,10 +235,138 @@
 }
 
 .editor-corpo {
+  display: block;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* Navegação das seções (abas fixas no topo do editor) */
+.secoes-nav {
+  position: sticky;
+  top: var(--altura-topo);
+  z-index: 12;
+  display: flex;
+  gap: 6px;
+  max-width: 1120px;
+  margin: 0 auto 18px;
+  padding: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-1);
+}
+.secoes-nav::-webkit-scrollbar {
+  display: none;
+}
+.secoes-nav button {
+  flex: 1 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--raio-p);
+  background: none;
+  color: var(--texto-2);
+  font-weight: 560;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.secoes-nav button:hover {
+  background: var(--cinza-claro);
+}
+.secoes-nav button.atual {
+  background: var(--verde-claro);
+  color: var(--verde-escuro);
+}
+.secoes-nav .n {
+  width: 22px;
+  height: 22px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 24px;
-  align-items: start;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--cinza-claro);
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 700;
+}
+.secoes-nav button.atual .n {
+  background: var(--verde);
+  color: #fff;
+}
+.secoes-nav .estado {
+  display: inline-flex;
+  color: var(--borda-forte);
+}
+.secoes-nav .estado.ok {
+  color: var(--verde);
+}
+.secoes-nav .estado.atencao {
+  color: var(--alerta);
+}
+
+/* Nº da OS em destaque */
+.campo-numero-os input {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+.campo-numero-os input:placeholder-shown {
+  border-color: var(--alerta);
+  background: var(--alerta-fundo);
+}
+
+/* Lacres: entrada e saída, lacre 1 e 2 */
+.lacres {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+.lacres-grade {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: center;
+  max-width: 620px;
+}
+.lacres-col {
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+.lacres-lin {
+  font-size: var(--fs-s);
+  font-weight: 600;
+  color: var(--texto-2);
+}
+.lacres .dica {
+  font-size: var(--fs-xs);
+  color: var(--texto-suave);
+}
+
+/* Itens com nome interno (o técnico vê) e nome que sai na OS */
+.item-interno {
+  display: block;
+  font-weight: 620;
+  color: var(--texto);
+  margin-bottom: 6px;
+}
+.item-nome-os {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.item-nome-os > span {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--texto-suave);
 }
 .editor-secoes {
   display: flex;
@@ -368,9 +496,47 @@
   gap: 8px;
 }
 
-/* Barra inferior (telas menores) */
+/* Barra inferior fixa: total e envio do orçamento */
 .barra-inferior {
-  display: none;
+  position: sticky;
+  bottom: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 24px -28px -48px;
+  padding: 12px 28px;
+  background: color-mix(in srgb, var(--superficie) 94%, transparent);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--borda);
+  box-shadow: 0 -4px 16px rgba(20, 24, 22, 0.06);
+}
+.barra-inferior .total-barra {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.barra-inferior .total-barra small {
+  color: var(--texto-suave);
+  font-size: var(--fs-xs);
+}
+.barra-inferior .total-barra strong {
+  font-size: 22px;
+  color: var(--verde-escuro);
+  font-variant-numeric: tabular-nums;
+}
+.resumo-barra {
+  display: flex;
+  gap: 16px;
+  font-size: var(--fs-s);
+  color: var(--texto-suave);
+}
+.resumo-barra b {
+  color: var(--texto-2);
+  font-variant-numeric: tabular-nums;
+}
+.barra-inferior .grupo-botoes {
+  margin-left: auto;
 }
 
 /* Cliente selecionado */
@@ -901,37 +1067,6 @@ details.textos .grade {
   .editor-lateral {
     display: none;
   }
-  .barra-inferior {
-    position: sticky;
-    bottom: 0;
-    z-index: 15;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 20px -28px -48px;
-    padding: 12px 28px;
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(8px);
-    border-top: 1px solid var(--borda);
-    box-shadow: 0 -4px 16px rgba(20, 24, 22, 0.06);
-  }
-  .barra-inferior .total-barra {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.2;
-  }
-  .barra-inferior .total-barra small {
-    color: var(--texto-suave);
-    font-size: var(--fs-xs);
-  }
-  .barra-inferior .total-barra strong {
-    font-size: 20px;
-    color: var(--verde-escuro);
-    font-variant-numeric: tabular-nums;
-  }
-  .barra-inferior .grupo-botoes {
-    margin-left: auto;
-  }
   .painel-grade {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -940,6 +1075,12 @@ details.textos .grade {
   }
   .fluxo a {
     border-bottom: 1px solid var(--borda);
+  }
+}
+
+@media (max-width: 1100px) {
+  .resumo-barra {
+    display: none;
   }
 }
 
@@ -963,6 +1104,15 @@ details.textos .grade {
   }
   .barra-inferior .btn span {
     display: none;
+  }
+  .secoes-nav button .t {
+    display: none;
+  }
+  .secoes-nav button.atual .t {
+    display: inline;
+  }
+  .lacres-grade {
+    grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr);
   }
   .envio-opcoes,
   .status-opcoes,

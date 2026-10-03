@@ -13,7 +13,10 @@ const STATUS = {
 };
 
 const CAMPOS_TEXTO = [
+  'numero_os',
   'cliente_nome',
+  'cliente_tipo',
+  'cliente_cidade',
   'cliente_telefone',
   'cliente_email',
   'cliente_documento',
@@ -24,6 +27,8 @@ const CAMPOS_TEXTO = [
   'pam',
   'lacre1',
   'lacre2',
+  'lacre_saida1',
+  'lacre_saida2',
   'lacres_aplicados',
   'selo',
   'capacidade',
@@ -54,6 +59,9 @@ function somarDias(isoData, dias) {
 }
 
 const arred = (v) => Math.round((Number(v) || 0) * 100) / 100;
+
+// Nº exibido: o da OS do sistema principal; sem ele, o nº interno do checklist.
+const identificacao = (o) => String(o.numero_os || '').trim() || `${o.numero} (interno)`;
 
 function calcularTotais(itens, desconto) {
   let servicos = 0;
@@ -117,15 +125,15 @@ function listar({ q = '', status = '', limite = 200 } = {}) {
     const termo = `%${q.trim()}%`;
     const numero = Number(q.replace(/\D/g, ''));
     where.push(
-      `(o.cliente_nome LIKE ? OR o.equipamento LIKE ? OR o.numero_serie LIKE ? OR o.tecnico LIKE ?${
+      `(o.cliente_nome LIKE ? OR o.equipamento LIKE ? OR o.numero_serie LIKE ? OR o.tecnico LIKE ? OR o.numero_os LIKE ?${
         numero ? ' OR o.numero = ?' : ''
       })`
     );
-    params.push(termo, termo, termo, termo);
+    params.push(termo, termo, termo, termo, termo);
     if (numero) params.push(numero);
   }
   const sql = `
-    SELECT o.id, o.numero, o.status, o.cliente_nome, o.equipamento, o.numero_serie,
+    SELECT o.id, o.numero, o.numero_os, o.status, o.cliente_nome, o.equipamento, o.numero_serie,
            o.tecnico, o.data_entrada, o.atualizado_em, o.desconto, o.orcamento_enviado_em, o.validade_dias,
            COALESCE((SELECT SUM(ROUND(valor_unitario * quantidade, 2)) FROM ordem_itens WHERE ordem_id = o.id), 0) AS subtotal
     FROM ordens o
@@ -197,7 +205,7 @@ function criar(dados = {}) {
         t
       );
     const novoId = Number(r.lastInsertRowid);
-    registrarHistorico(novoId, 'criacao', `Ordem de serviço nº ${numero} aberta`);
+    registrarHistorico(novoId, 'criacao', 'Checklist aberto');
     return novoId;
   });
   if (Object.keys(dados).length) return salvar(id, dados);
@@ -258,8 +266,8 @@ function salvar(id, dados) {
     if (Array.isArray(dados.itens)) {
       db.prepare('DELETE FROM ordem_itens WHERE ordem_id = ?').run(id);
       const ins = db.prepare(
-        `INSERT INTO ordem_itens (ordem_id, tipo, ref_id, descricao, valor_unitario, quantidade, posicao)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO ordem_itens (ordem_id, tipo, ref_id, descricao, nome_interno, valor_unitario, quantidade, posicao)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       );
       dados.itens.forEach((it, idx) => {
         const descricao = String(it.descricao || '').trim();
@@ -269,6 +277,7 @@ function salvar(id, dados) {
           it.tipo === 'peca' ? 'peca' : 'servico',
           it.ref_id ? Number(it.ref_id) : null,
           descricao,
+          String(it.nome_interno || '').trim() === descricao ? '' : String(it.nome_interno || '').trim(),
           arred(it.valor_unitario),
           Number(it.quantidade) > 0 ? Number(it.quantidade) : 1,
           idx
@@ -297,18 +306,20 @@ function duplicar(id) {
   copia.cliente_id = o.cliente_id;
   copia.desconto = o.desconto;
   copia.validade_dias = o.validade_dias;
+  copia.numero_os = ''; // a nova OS terá outro número no sistema principal
   copia.data_entrada = hoje();
   copia.data_situacao = hoje();
   copia.checklist = (o.checklist || []).map((c) => ({ item: c.item, entrada: '', saida: '', obs: '' }));
-  copia.itens = o.itens.map(({ tipo, ref_id, descricao, valor_unitario, quantidade }) => ({
+  copia.itens = o.itens.map(({ tipo, ref_id, descricao, nome_interno, valor_unitario, quantidade }) => ({
     tipo,
     ref_id,
     descricao,
+    nome_interno,
     valor_unitario,
     quantidade,
   }));
   const nova = criar(copia);
-  registrarHistorico(nova.id, 'criacao', `Copiada da OS nº ${o.numero}`);
+  registrarHistorico(nova.id, 'criacao', `Copiada da OS nº ${identificacao(o)}`);
   return obter(nova.id);
 }
 
@@ -363,6 +374,7 @@ module.exports = {
   duplicar,
   marcarOrcamentoEnviado,
   calcularTotais,
+  identificacao,
   resumo,
   somarDias,
   hoje,

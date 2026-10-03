@@ -1319,28 +1319,11 @@ select.entrada {
   background: var(--superficie-2);
   border-radius: 0 0 var(--raio-g) var(--raio-g);
 }
-.painel-fundo {
-  place-items: stretch end;
-  padding: 0;
-}
-.painel-fundo .modal {
-  max-width: 480px;
-  max-height: none;
-  height: 100vh;
-  border-radius: 0;
-  animation: deslizar 0.2s ease-out;
-}
-.painel-fundo .modal-rodape {
-  border-radius: 0;
-}
-.painel-fundo .modal {
-  min-width: 0;
-}
-.painel-fundo .modal-corpo {
-  flex: 1;
-}
 .modal-rodape {
   flex-wrap: wrap;
+}
+.modal-rodape .a-esquerda {
+  margin-right: auto;
 }
 @keyframes aparecer {
   from {
@@ -1351,12 +1334,6 @@ select.entrada {
   from {
     opacity: 0;
     transform: translateY(12px) scale(0.98);
-  }
-}
-@keyframes deslizar {
-  from {
-    transform: translateX(40px);
-    opacity: 0;
   }
 }
 

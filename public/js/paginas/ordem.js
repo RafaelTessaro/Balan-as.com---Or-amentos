@@ -3,6 +3,7 @@
 
 import { api, obterConfig } from '../api.js';
 import { navegar } from '../app.js';
+import { abrirCadastroCliente, rotuloDocumento, tipoDoDocumento } from '../cliente-form.js';
 import {
   $,
   $$,
@@ -33,7 +34,10 @@ import {
 
 // Campos simples (texto) editados diretamente pelos inputs com data-campo.
 const CAMPOS = [
+  'numero_os',
   'cliente_nome',
+  'cliente_tipo',
+  'cliente_cidade',
   'cliente_telefone',
   'cliente_email',
   'cliente_documento',
@@ -44,7 +48,8 @@ const CAMPOS = [
   'pam',
   'lacre1',
   'lacre2',
-  'lacres_aplicados',
+  'lacre_saida1',
+  'lacre_saida2',
   'selo',
   'capacidade',
   'acessorios_outros',
@@ -121,7 +126,9 @@ export async function montar(el, { params, query }) {
   let modoDesconto = 'valor'; // 'valor' | 'percentual'
 
   el.classList.add('largo');
-  definirTitulo(`OS nº ${o.numero}`);
+  // "OS nº 12345" (nº do sistema principal) ou "OS sem número" enquanto não for informado.
+  const rotuloOS = () => (o.numero_os.trim() ? `OS nº ${o.numero_os.trim()}` : 'OS sem número');
+  definirTitulo(rotuloOS());
 
   // -------------------------------------------------------------------------
   // Salvamento automático
@@ -140,10 +147,11 @@ export async function montar(el, { params, query }) {
     d.desconto = o.desconto;
     d.validade_dias = o.validade_dias;
     d.status = o.status;
-    d.itens = o.itens.map(({ tipo, ref_id, descricao, valor_unitario, quantidade }) => ({
+    d.itens = o.itens.map(({ tipo, ref_id, descricao, nome_interno, valor_unitario, quantidade }) => ({
       tipo,
       ref_id,
       descricao,
+      nome_interno,
       valor_unitario,
       quantidade,
     }));
@@ -224,7 +232,7 @@ export async function montar(el, { params, query }) {
 
   function estadoSecao(sid) {
     if (sid === 'identificacao') {
-      const ok = o.cliente_nome.trim() && o.equipamento.trim();
+      const ok = o.numero_os.trim() && o.cliente_nome.trim() && o.equipamento.trim();
       return ok ? 'ok' : '';
     }
     if (sid === 'checklist') {
@@ -265,13 +273,14 @@ export async function montar(el, { params, query }) {
   function htmlCliente() {
     if (o.cliente_id && o.cliente) {
       const c = o.cliente;
-      const contato = [c.whatsapp || c.telefone, c.email, c.cidade].filter(Boolean).join(' · ');
+      const tipo = c.tipo || tipoDoDocumento(c.documento);
+      const detalhes = [rotuloDocumento({ ...c, tipo }), c.cidade].filter(Boolean).join(' · ');
       return `
         <div class="cliente-card">
           <div class="avatar">${esc(iniciais(c.nome))}</div>
           <div class="info">
-            <strong>${esc(c.nome)}</strong>
-            <span>${esc(contato || 'Sem contato cadastrado')}</span>
+            <strong>${esc(c.nome)} <span class="etiqueta etiqueta-tipo">${tipo === 'PF' ? 'Pessoa física' : 'Pessoa jurídica'}</span></strong>
+            <span>${esc(detalhes || 'Sem CPF/CNPJ e cidade cadastrados')}</span>
           </div>
           <button type="button" class="btn btn-fantasma btn-p" data-acao="editar-cliente">${icone('pencil')}Editar</button>
           <button type="button" class="btn btn-fantasma btn-p" data-acao="trocar-cliente">${icone('refresh-cw')}Trocar</button>
@@ -282,9 +291,9 @@ export async function montar(el, { params, query }) {
         <label for="busca-cliente">Cliente</label>
         <div class="busca">
           ${icone('search')}
-          <input id="busca-cliente" class="entrada" value="${esc(o.cliente_nome)}" placeholder="Buscar cliente cadastrado ou digitar um novo nome…" />
+          <input id="busca-cliente" class="entrada" value="${esc(o.cliente_nome)}" placeholder="Buscar por nome, CPF ou CNPJ — ou cadastrar um novo…" />
         </div>
-        <span class="dica">Escolha um cliente da lista ou cadastre um novo direto daqui.</span>
+        <span class="dica">Escolha um cliente da lista ou cadastre um novo direto daqui (para CNPJ, os dados vêm da Receita).</span>
       </div>`;
   }
 
@@ -300,30 +309,43 @@ export async function montar(el, { params, query }) {
         </div>
         <div class="cartao-corpo">
           <div class="bloco">
-            <div id="area-cliente">${htmlCliente()}</div>
-            <div class="grade grade-3" style="margin-top:16px">
-              ${campoTexto('cliente_telefone', 'Telefone / WhatsApp', { tipo: 'tel', ph: '(19) 99999-9999', extra: 'data-mascara="telefone"' })}
-              ${campoTexto('cliente_email', 'E-mail', { tipo: 'email', ph: 'cliente@email.com' })}
-              ${campoTexto('cliente_documento', 'CPF / CNPJ <span class="opcional">(opcional)</span>', { extra: 'data-mascara="documento"' })}
-            </div>
-          </div>
-
-          <div class="bloco">
             <div class="grade grade-4">
+              ${campoTexto('numero_os', 'Nº da OS <span class="obrigatorio">*</span>', {
+                classe: 'campo-numero-os',
+                ph: 'Ex.: 12345',
+                dica: 'Número gerado no sistema de ordens de serviço.',
+                extra: 'autocomplete="off" inputmode="numeric"',
+              })}
               ${campoTexto('data_entrada', 'Data de entrada', { tipo: 'date' })}
-              <div class="campo">
+              <div class="campo span-2">
                 <label for="c-tecnico">Técnico</label>
                 <input id="c-tecnico" data-campo="tecnico" list="lista-tecnicos" value="${esc(o.tecnico)}" placeholder="Nome do técnico" />
                 <datalist id="lista-tecnicos">${tecnicos.map((t) => `<option value="${esc(t)}"></option>`).join('')}</datalist>
               </div>
+            </div>
+            <div id="area-cliente" style="margin-top:16px">${htmlCliente()}</div>
+          </div>
+
+          <div class="bloco">
+            <div class="grade grade-4">
               ${campoTexto('equipamento', 'Equipamento / marca / modelo', { classe: 'span-2', ph: 'Ex.: Toledo Prix 5 Plus 15 kg' })}
               ${campoTexto('numero_serie', 'Nº de série')}
               ${campoTexto('capacidade', 'Capacidade', { ph: 'Ex.: 15 kg / 5 g' })}
               ${campoTexto('pam', 'PAM <span class="opcional">(portaria do modelo)</span>', { classe: 'span-2', ph: 'Ex.: Portaria Inmetro 236/2014' })}
-              ${campoTexto('lacre1', 'Lacre nº 1 <span class="opcional">(entrada)</span>')}
-              ${campoTexto('lacre2', 'Lacre nº 2 <span class="opcional">(entrada)</span>')}
-              ${campoTexto('lacres_aplicados', 'Lacres aplicados <span class="opcional">(saída)</span>')}
-              ${campoTexto('selo', 'Selo de reparo nº')}
+              ${campoTexto('selo', 'Selo de reparo nº', { classe: 'span-2' })}
+            </div>
+            <div class="lacres" role="group" aria-label="Lacres">
+              <span class="rotulo">Lacres</span>
+              <div class="lacres-grade">
+                <span></span><span class="lacres-col">Lacre 1</span><span class="lacres-col">Lacre 2</span>
+                <span class="lacres-lin">Entrada</span>
+                <input class="entrada" data-campo="lacre1" value="${esc(o.lacre1)}" aria-label="Lacre 1 na entrada" placeholder="Nº do lacre" />
+                <input class="entrada" data-campo="lacre2" value="${esc(o.lacre2)}" aria-label="Lacre 2 na entrada" placeholder="Nº do lacre" />
+                <span class="lacres-lin">Saída</span>
+                <input class="entrada" data-campo="lacre_saida1" value="${esc(o.lacre_saida1)}" aria-label="Lacre 1 na saída" placeholder="Nº do lacre" />
+                <input class="entrada" data-campo="lacre_saida2" value="${esc(o.lacre_saida2)}" aria-label="Lacre 2 na saída" placeholder="Nº do lacre" />
+              </div>
+              <span class="dica">Balança que chega com dois lacres deve sair com dois lacres.</span>
             </div>
           </div>
 
@@ -414,7 +436,13 @@ export async function montar(el, { params, query }) {
     return `
       <tr class="item" data-k="${it._k}">
         <td class="c-desc">
-          <input class="entrada" data-item="descricao" value="${esc(it.descricao)}" aria-label="Descrição" />
+          ${
+            it.nome_interno && it.nome_interno !== it.descricao
+              ? `<span class="item-interno">${esc(it.nome_interno)}</span>
+                 <label class="item-nome-os"><span>Sai na OS como</span>
+                   <input class="entrada" data-item="descricao" value="${esc(it.descricao)}" aria-label="Nome que sai na OS" /></label>`
+              : `<input class="entrada" data-item="descricao" value="${esc(it.descricao)}" aria-label="Descrição" />`
+          }
           ${it.ref_id ? '' : '<span class="item-origem">Item avulso (não cadastrado no catálogo)</span>'}
         </td>
         <td class="c-qtd">
@@ -587,33 +615,12 @@ export async function montar(el, { params, query }) {
       </section>`;
   }
 
-  function htmlLateral() {
-    return `
-      <aside class="editor-lateral">
-        <nav class="cartao indice-secoes" id="indice" aria-label="Seções da OS">
-          ${SECOES.map(
-            (s, i) =>
-              `<button type="button" data-ir="${s.id}"><span class="n">${i + 1}</span>${esc(s.titulo)}<span class="estado" data-estado="${s.id}"></span></button>`
-          ).join('')}
-        </nav>
-        <div class="cartao resumo-valores">
-          <dl id="resumo-dl"></dl>
-          <div class="total"><span>Total</span><strong id="resumo-total"></strong></div>
-          <div class="botoes">
-            <button type="button" class="btn btn-primario" data-acao="ver-pdf">${icone('file-text')}Ver orçamento (PDF)</button>
-            <button type="button" class="btn" data-acao="whatsapp">${icone('message-circle')}Enviar por WhatsApp</button>
-            <button type="button" class="btn" data-acao="email">${icone('mail')}Enviar por e-mail</button>
-          </div>
-        </div>
-      </aside>`;
-  }
-
   function htmlTopo() {
     return `
-      <div class="migalha"><a href="#/ordens">Ordens de serviço</a>${icone('chevron-right', 'i-s')}<span>OS nº ${o.numero}</span></div>
+      <div class="migalha"><a href="#/ordens">Ordens de serviço</a>${icone('chevron-right', 'i-s')}<span data-rotulo-os>${esc(rotuloOS())}</span></div>
       <div class="editor-topo">
         <div>
-          <h1>OS nº ${o.numero} <span id="selo-topo" title="Alterar situação">${seloStatus(o.status)}</span></h1>
+          <h1><span data-rotulo-os>${esc(rotuloOS())}</span> <span id="selo-topo" title="Alterar situação">${seloStatus(o.status)}</span></h1>
           <div class="subtitulo">
             <span id="subtitulo-cliente">${esc(o.cliente_nome || 'Cliente não informado')}${o.equipamento ? ` · ${esc(o.equipamento)}` : ''}</span>
             <span aria-hidden="true">·</span>
@@ -643,6 +650,12 @@ export async function montar(el, { params, query }) {
   el.innerHTML = `
     <div class="editor">
       ${htmlTopo()}
+      <nav class="secoes-nav" id="indice" aria-label="Seções da OS">
+        ${SECOES.map(
+          (sec, i) =>
+            `<button type="button" data-ir="${sec.id}"><span class="n">${i + 1}</span><span class="t">${esc(sec.titulo)}</span><span class="estado" data-estado="${sec.id}"></span></button>`
+        ).join('')}
+      </nav>
       <div class="editor-corpo">
         <div class="editor-secoes">
           ${htmlIdentificacao()}
@@ -651,12 +664,13 @@ export async function montar(el, { params, query }) {
           ${htmlOrcamento()}
           ${htmlSituacao()}
         </div>
-        ${htmlLateral()}
       </div>
       <div class="barra-inferior">
         <div class="total-barra"><small>Total do orçamento</small><strong id="barra-total"></strong></div>
+        <div class="resumo-barra" id="resumo-barra"></div>
         <div class="grupo-botoes">
           <button type="button" class="btn" data-acao="whatsapp" title="Enviar por WhatsApp">${icone('message-circle')}<span>WhatsApp</span></button>
+          <button type="button" class="btn" data-acao="email" title="Enviar por e-mail">${icone('mail')}<span>E-mail</span></button>
           <button type="button" class="btn btn-primario" data-acao="ver-pdf">${icone('file-text')}<span>Orçamento PDF</span></button>
         </div>
       </div>
@@ -671,15 +685,14 @@ export async function montar(el, { params, query }) {
 
   function atualizarResumo() {
     const t = totais();
-    const dl = $('#resumo-dl', el);
-    if (dl) {
-      dl.innerHTML = `<dt>Serviços</dt><dd>${moeda(t.servicos)}</dd><dt>Peças</dt><dd>${moeda(t.pecas)}</dd>${
-        t.desconto ? `<dt>Desconto</dt><dd class="vermelho">− ${moeda(t.desconto)}</dd>` : ''
-      }`;
-      $('#resumo-total', el).textContent = moeda(t.total);
-    }
     const barra = $('#barra-total', el);
     if (barra) barra.textContent = moeda(t.total);
+    const rb = $('#resumo-barra', el);
+    if (rb) {
+      rb.innerHTML = `<span>Serviços <b>${moeda(t.servicos)}</b></span><span>Peças <b>${moeda(t.pecas)}</b></span>${
+        t.desconto ? `<span>Desconto <b class="vermelho">− ${moeda(t.desconto)}</b></span>` : ''
+      }`;
+    }
     const qt = $('#quadro-totais', el);
     if (qt) qt.innerHTML = htmlQuadroTotais();
     for (const tipo of ['servico', 'peca']) {
@@ -705,6 +718,8 @@ export async function montar(el, { params, query }) {
       est.className = `estado ${e}`;
       est.innerHTML = icone(e === 'ok' ? 'circle-check' : e === 'atencao' ? 'circle-alert' : 'circle-dashed', 'i-s');
     }
+    for (const r of $$('[data-rotulo-os]', el)) r.textContent = rotuloOS();
+    definirTitulo(rotuloOS());
     const sub = $('#subtitulo-cliente', el);
     if (sub) sub.textContent = `${o.cliente_nome || 'Cliente não informado'}${o.equipamento ? ` · ${o.equipamento}` : ''}`;
   }
@@ -740,13 +755,12 @@ export async function montar(el, { params, query }) {
     o.cliente_id = c.id;
     o.cliente = c;
     o.cliente_nome = c.nome;
-    o.cliente_telefone = c.whatsapp || c.telefone || '';
-    o.cliente_email = c.email || '';
+    o.cliente_tipo = c.tipo || tipoDoDocumento(c.documento);
     o.cliente_documento = c.documento || '';
-    for (const campo of ['cliente_telefone', 'cliente_email', 'cliente_documento']) {
-      const inp = $(`[data-campo="${campo}"]`, el);
-      if (inp) inp.value = o[campo];
-    }
+    o.cliente_cidade = c.cidade || '';
+    // Contatos antigos do cadastro (se houver) só servem para pré-preencher o envio.
+    o.cliente_telefone = c.whatsapp || c.telefone || o.cliente_telefone || '';
+    o.cliente_email = c.email || o.cliente_email || '';
     redesenharCliente();
     alterou({ imediato: true });
   }
@@ -769,11 +783,11 @@ export async function montar(el, { params, query }) {
         if (!clientesCache) clientesCache = await api.get('/clientes');
         const n = normalizar(q.trim());
         return clientesCache
-          .filter((c) => !n || normalizar(`${c.nome} ${c.documento} ${c.telefone} ${c.whatsapp}`).includes(n))
+          .filter((c) => !n || normalizar(`${c.nome} ${c.documento} ${c.cidade}`).includes(n))
           .slice(0, 8);
       },
       item: (c, q) =>
-        `<div class="nome">${realcar(c.nome, q)}<small>${esc([c.whatsapp || c.telefone, c.cidade].filter(Boolean).join(' · '))}</small></div>`,
+        `<div class="nome">${realcar(c.nome, q)}<small>${esc([rotuloDocumento(c), c.cidade].filter(Boolean).join(' · '))}</small></div>`,
       escolher: (c) => preencherContatoCliente(c),
       criar: (q) => modalCliente({ nome: q }),
       rotuloCriar: (q) => `Cadastrar novo cliente “${q}”`,
@@ -782,63 +796,15 @@ export async function montar(el, { params, query }) {
 
   async function modalCliente(base = {}) {
     const editando = Boolean(base.id);
-    const c = {
-      nome: '',
-      documento: '',
-      telefone: '',
-      whatsapp: '',
-      email: '',
-      cidade: '',
-      endereco: '',
-      ...base,
-    };
-    if (!editando) {
-      c.whatsapp = c.whatsapp || o.cliente_telefone;
-      c.email = c.email || o.cliente_email;
-      c.documento = c.documento || o.cliente_documento;
-    }
-    const m = abrirModal({
-      titulo: editando ? 'Editar cliente' : 'Novo cliente',
-      painel: true,
-      corpo: `
-        <div class="grade">
-          <div class="campo"><label>Nome / razão social *</label><input name="nome" value="${esc(c.nome)}" required /></div>
-          <div class="campo"><label>CPF / CNPJ</label><input name="documento" data-mascara="documento" value="${esc(c.documento)}" /></div>
-          <div class="grade grade-2">
-            <div class="campo"><label>WhatsApp</label><input name="whatsapp" data-mascara="telefone" value="${esc(c.whatsapp)}" /></div>
-            <div class="campo"><label>Telefone</label><input name="telefone" data-mascara="telefone" value="${esc(c.telefone)}" /></div>
-          </div>
-          <div class="campo"><label>E-mail</label><input name="email" type="email" value="${esc(c.email)}" /></div>
-          <div class="campo"><label>Endereço</label><input name="endereco" value="${esc(c.endereco)}" /></div>
-          <div class="campo"><label>Cidade</label><input name="cidade" value="${esc(c.cidade)}" placeholder="Ex.: Rio Claro - SP" /></div>
-        </div>`,
-      acoes: [
-        { texto: 'Cancelar', classe: 'btn-fantasma' },
-        {
-          texto: editando ? 'Salvar' : 'Cadastrar e usar nesta OS',
-          classe: 'btn-primario',
-          tipo: 'submit',
-          icone: 'check',
-          aoClicar: async ({ form }) => {
-            const dados = Object.fromEntries(new FormData(form));
-            if (!dados.nome.trim()) {
-              form.nome.closest('.campo').classList.add('erro');
-              form.nome.focus();
-              return false;
-            }
-            try {
-              const salvo = editando ? await api.put(`/clientes/${c.id}`, dados) : await api.post('/clientes', dados);
-              return salvo;
-            } catch (e) {
-              erro(e);
-              return false;
-            }
-          },
-        },
-      ],
-      aoAbrir: ({ form }) => ligarMascaras(form),
+    if (!clientesCache) clientesCache = await api.get('/clientes').catch(() => []);
+    const cidades = [...new Set(clientesCache.map((c) => c.cidade).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    // Texto digitado na busca: se parece CPF/CNPJ vai para o documento, senão para o nome.
+    const pareceDoc = /^[\d.\-/ ]{11,}$/.test(String(base.nome || '').trim());
+    const cliente = !editando && pareceDoc ? { documento: base.nome } : base;
+    const salvo = await abrirCadastroCliente(cliente, {
+      textoSalvar: editando ? 'Salvar' : 'Cadastrar e usar nesta OS',
+      cidades,
     });
-    const salvo = await m.resultado;
     if (salvo && salvo.id) {
       clientesCache = null;
       toast(editando ? 'Cliente atualizado.' : 'Cliente cadastrado.');
@@ -860,13 +826,24 @@ export async function montar(el, { params, query }) {
     }
   }
 
+  // Item a partir do catálogo: a descrição é o nome que sai na OS; o técnico vê o nome interno.
+  function dadosDoCatalogo(c) {
+    const nomeOs = (c.nome_os || '').trim();
+    return {
+      ref_id: c.id,
+      descricao: nomeOs || c.nome,
+      nome_interno: nomeOs && nomeOs !== c.nome ? c.nome : '',
+      valor_unitario: c.valor,
+    };
+  }
+
   function adicionarItem(tipo, dados, { focar = 'valor_unitario' } = {}) {
     if (dados.ref_id) {
       const existente = o.itens.find((i) => i.tipo === tipo && i.ref_id === dados.ref_id && i.valor_unitario === dados.valor_unitario);
       if (existente) {
         existente.quantidade = arred(existente.quantidade + 1);
         redesenharItens(tipo);
-        toast(`Quantidade de “${existente.descricao}” atualizada para ${qtd(existente.quantidade)}.`, 'info');
+        toast(`Quantidade de “${existente.nome_interno || existente.descricao}” atualizada para ${qtd(existente.quantidade)}.`, 'info');
         alterou();
         return;
       }
@@ -886,7 +863,7 @@ export async function montar(el, { params, query }) {
         buscar: async (q) => {
           const n = normalizar(q.trim());
           const r = catalogo[tipo]
-            .filter((c) => !n || normalizar(`${c.nome} ${c.descricao || ''} ${c.codigo || ''}`).includes(n))
+            .filter((c) => !n || normalizar(`${c.nome} ${c.nome_os || ''} ${c.descricao || ''} ${c.codigo || ''}`).includes(n))
             .slice(0, 30);
           if (q.trim()) r.push({ __avulso: true, nome: q.trim() });
           return r;
@@ -895,12 +872,16 @@ export async function montar(el, { params, query }) {
           c.__avulso
             ? `<div class="nome">${icone('plus', 'i-s')} Adicionar “${esc(c.nome)}” só nesta OS<small>Item avulso, sem cadastrar no catálogo</small></div>`
             : `<div class="nome">${realcar(c.nome, q)}${
-                c.descricao || c.codigo ? `<small>${esc(c.descricao || `Cód. ${c.codigo}`)}</small>` : ''
+                c.nome_os && c.nome_os !== c.nome
+                  ? `<small>Sai na OS como: ${esc(c.nome_os)}</small>`
+                  : c.descricao || c.codigo
+                    ? `<small>${esc(c.descricao || `Cód. ${c.codigo}`)}</small>`
+                    : ''
               }</div><div class="preco">${moeda(c.valor)}</div>`,
         escolher: (c) => {
           input.value = '';
           if (c.__avulso) adicionarItem(tipo, { descricao: c.nome });
-          else adicionarItem(tipo, { ref_id: c.id, descricao: c.nome, valor_unitario: c.valor });
+          else adicionarItem(tipo, dadosDoCatalogo(c));
         },
         criar: (q) => {
           input.value = '';
@@ -922,8 +903,8 @@ export async function montar(el, { params, query }) {
           <div class="grade grade-2">
             <div class="campo"><label>${ehServico ? 'Valor padrão' : 'Valor unitário'}</label>
               <div class="entrada-prefixo"><span>R$</span><input name="valor" class="entrada-valor" inputmode="decimal" placeholder="0,00" /></div></div>
-            <div class="campo"><label>${ehServico ? 'Descrição' : 'Código'} <span class="opcional">(opcional)</span></label><input name="${
-              ehServico ? 'descricao' : 'codigo'
+            <div class="campo"><label>${ehServico ? 'Nome na OS' : 'Código'} <span class="opcional">(opcional)</span></label><input name="${
+              ehServico ? 'nome_os' : 'codigo'
             }" /></div>
           </div>
           <p class="texto-suave texto-p">Fica salvo no catálogo para as próximas ordens de serviço.</p>
@@ -957,7 +938,7 @@ export async function montar(el, { params, query }) {
     if (novo && novo.id) {
       catalogo[tipo].push(novo);
       toast(`${ehServico ? 'Serviço' : 'Peça'} cadastrad${ehServico ? 'o' : 'a'} no catálogo.`);
-      adicionarItem(tipo, { ref_id: novo.id, descricao: novo.nome, valor_unitario: novo.valor });
+      adicionarItem(tipo, dadosDoCatalogo(novo));
     }
   }
 
@@ -990,7 +971,7 @@ export async function montar(el, { params, query }) {
   async function verPdf() {
     if (!(await prepararPdf())) return;
     const m = abrirModal({
-      titulo: `Orçamento nº ${o.numero}`,
+      titulo: `Orçamento — ${rotuloOS()}`,
       tamanho: 'grande',
       corpo: `<iframe class="pdf-quadro" src="${urlPdf()}" title="Pré-visualização do orçamento"></iframe>`,
       acoes: [
@@ -1079,7 +1060,6 @@ export async function montar(el, { params, query }) {
               const r = await api.post(`/ordens/${id}/enviar-email`, dados);
               if (!o.cliente_email && dados.para) {
                 o.cliente_email = dados.para;
-                $('[data-campo="cliente_email"]', el).value = dados.para;
                 alterou();
               }
               return r;
@@ -1137,7 +1117,7 @@ export async function montar(el, { params, query }) {
         const blob = await (await fetch(urlPdf())).blob();
         const arquivo = new File([blob], msg.arquivo, { type: 'application/pdf' });
         if (!navigator.canShare({ files: [arquivo] })) throw new Error('Compartilhamento de arquivos indisponível neste navegador.');
-        await navigator.share({ files: [arquivo], text: mensagem, title: `Orçamento nº ${o.numero}` });
+        await navigator.share({ files: [arquivo], text: mensagem, title: `Orçamento — ${rotuloOS()}` });
       } catch (e) {
         if (e.name !== 'AbortError') erro(e);
         return;
@@ -1150,7 +1130,6 @@ export async function montar(el, { params, query }) {
     }
     if (telefone && !o.cliente_telefone) {
       o.cliente_telefone = telefone;
-      $('[data-campo="cliente_telefone"]', el).value = telefone;
       alterou();
     }
     try {
@@ -1360,11 +1339,11 @@ export async function montar(el, { params, query }) {
       } else if (acao === 'duplicar') {
         await salvarAgora();
         const nova = await api.post(`/ordens/${id}/duplicar`);
-        toast(`OS nº ${nova.numero} criada a partir desta.`);
-        navegar(`/ordens/${nova.id}`);
+        toast("Cópia criada. Informe o nº da nova OS.");
+        navegar(`/ordens/${nova.id}?nova=1`);
       } else if (acao === 'excluir') {
         const ok = await confirmar({
-          titulo: `Excluir OS nº ${o.numero}?`,
+          titulo: `Excluir ${rotuloOS()}?`,
           mensagem: 'O checklist, os itens e o histórico desta ordem de serviço serão apagados. Esta ação não pode ser desfeita.',
           confirmar: 'Excluir',
           perigo: true,
@@ -1375,7 +1354,7 @@ export async function montar(el, { params, query }) {
         await api.del(`/ordens/${id}`);
         excluida = true;
         window.dispatchEvent(new Event('ordens-alteradas'));
-        toast(`OS nº ${o.numero} excluída.`);
+        toast(`${rotuloOS()} excluída.`);
         navegar('/ordens');
       }
     } catch (err) {
@@ -1405,6 +1384,7 @@ export async function montar(el, { params, query }) {
         if (en.isIntersecting) {
           const sid = en.target.id.replace('sec-', '');
           $$('#indice [data-ir]', el).forEach((b) => b.classList.toggle('atual', b.dataset.ir === sid));
+          $('#indice .atual', el)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
         }
       }
     },
@@ -1415,12 +1395,13 @@ export async function montar(el, { params, query }) {
   hidratarIcones(el);
   if (recemCriada) {
     history.replaceState(null, '', `#/ordens/${id}`);
-    setTimeout(() => ($('#busca-cliente', el) || $('[data-campo="equipamento"]', el))?.focus(), 60);
+    setTimeout(() => $('[data-campo="numero_os"]', el)?.focus(), 60);
   }
 
   // OS recém-criada e abandonada sem nenhum dado é descartada.
   let excluida = false;
   const vazia = () =>
+    !o.numero_os.trim() &&
     !o.cliente_nome.trim() &&
     !o.equipamento.trim() &&
     !o.numero_serie.trim() &&

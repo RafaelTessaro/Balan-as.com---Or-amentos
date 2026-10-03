@@ -121,6 +121,55 @@ const MIGRACOES = [
   );
   CREATE INDEX idx_historico_ordem ON historico(ordem_id);
   `,
+
+  // v2: cliente pessoa física/jurídica, nº da OS vindo do sistema principal,
+  // lacres 1 e 2 de entrada e de saída, e nome do serviço que sai na OS.
+  () => {
+    db.exec(`
+      ALTER TABLE clientes ADD COLUMN tipo TEXT NOT NULL DEFAULT 'PJ';
+      ALTER TABLE servicos ADD COLUMN nome_os TEXT DEFAULT '';
+      ALTER TABLE ordem_itens ADD COLUMN nome_interno TEXT DEFAULT '';
+      ALTER TABLE ordens ADD COLUMN numero_os TEXT DEFAULT '';
+      ALTER TABLE ordens ADD COLUMN cliente_tipo TEXT DEFAULT '';
+      ALTER TABLE ordens ADD COLUMN cliente_cidade TEXT DEFAULT '';
+      ALTER TABLE ordens ADD COLUMN lacre_saida1 TEXT DEFAULT '';
+      ALTER TABLE ordens ADD COLUMN lacre_saida2 TEXT DEFAULT '';
+    `);
+    const digitos = (v) => String(v || '').replace(/[^0-9A-Za-z]/g, '');
+    for (const c of db.prepare('SELECT id, documento FROM clientes').all()) {
+      db.prepare('UPDATE clientes SET tipo = ? WHERE id = ?').run(digitos(c.documento).length === 11 ? 'PF' : 'PJ', c.id);
+    }
+    // "Lacres aplicados" (texto livre) passa a ser lacre 1 e 2 de saída.
+    for (const o of db.prepare("SELECT id, lacres_aplicados FROM ordens WHERE lacres_aplicados <> ''").all()) {
+      const [l1 = '', l2 = ''] = String(o.lacres_aplicados).split(/\s*[,;/]\s*|\s+e\s+/).filter(Boolean);
+      db.prepare('UPDATE ordens SET lacre_saida1 = ?, lacre_saida2 = ? WHERE id = ?').run(l1, l2, o.id);
+    }
+    db.exec(`
+      UPDATE ordens SET cliente_cidade = COALESCE((SELECT cidade FROM clientes c WHERE c.id = ordens.cliente_id), '');
+      UPDATE ordens SET cliente_tipo = COALESCE((SELECT tipo FROM clientes c WHERE c.id = ordens.cliente_id), '');
+    `);
+    // Mão de obra por tipo de balança: nomes internos diferentes, mesmo nome na OS.
+    const existe = db.prepare('SELECT 1 FROM servicos WHERE nome = ?');
+    const t = agora();
+    for (const [nome, valor] of MAO_DE_OBRA) {
+      if (!existe.get(nome)) {
+        db.prepare('INSERT INTO servicos (nome, nome_os, valor, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?)').run(
+          nome,
+          NOME_OS_MAO_DE_OBRA,
+          valor,
+          t,
+          t
+        );
+      }
+    }
+  },
+];
+
+const NOME_OS_MAO_DE_OBRA = 'Limpeza, regulagem, calibração e lacração';
+const MAO_DE_OBRA = [
+  ['Mão de obra – balança com compressor', 190],
+  ['Mão de obra – balança sem compressor', 150],
+  ['Mão de obra – PET', 120],
 ];
 
 function migrar() {
@@ -128,26 +177,29 @@ function migrar() {
   for (let v = versao; v < MIGRACOES.length; v++) {
     db.exec('BEGIN');
     try {
-      db.exec(MIGRACOES[v]);
+      if (typeof MIGRACOES[v] === 'function') MIGRACOES[v]();
+      else db.exec(MIGRACOES[v]);
+      if (v === 0) popularDadosIniciais();
       db.exec(`PRAGMA user_version = ${v + 1}`);
       db.exec('COMMIT');
     } catch (e) {
       db.exec('ROLLBACK');
       throw e;
     }
-    if (v === 0) popularDadosIniciais();
   }
 }
 
-// Serviços e peças que já estavam cadastrados na planilha.
+// Peças da planilha original e o serviço de formatação. A mão de obra por
+// tipo de balança é criada pela migração v2.
 function popularDadosIniciais() {
   const t = agora();
-  const insServ = db.prepare(
-    'INSERT INTO servicos (nome, descricao, valor, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?)'
+  db.prepare('INSERT INTO servicos (nome, descricao, valor, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?)').run(
+    'Formatação',
+    '',
+    120,
+    t,
+    t
   );
-  insServ.run('Limpeza, Regulagem, Ajuste de Peso e Lacração', '', 190, t, t);
-  insServ.run('Limpeza, Regulagem, Ajuste de Peso e Lacração', 'Valor reduzido', 140, t, t);
-  insServ.run('Formatação', '', 120, t, t);
 
   const dataPlanilha = '2026-08-03T12:00:00.000Z';
   const insPeca = db.prepare(

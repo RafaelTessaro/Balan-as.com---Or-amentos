@@ -1,8 +1,9 @@
 // Catálogo de serviços e de peças (mesma tela, conforme params.tipo).
 //
-// Regra herdada da planilha: serviços com o mesmo nome e valores diferentes
-// (ex.: "Limpeza, Regulagem…" R$ 190 e "Valor reduzido" R$ 140) são itens
-// separados — a descrição serve para diferenciá-los.
+// Serviços têm um nome interno (o que o técnico vê ao montar o orçamento) e,
+// opcionalmente, o nome que sai na OS/orçamento. Ex.: "Mão de obra – balança
+// com compressor" (R$ 190) e "Mão de obra – PET" (R$ 120) saem os dois como
+// "Limpeza, regulagem, calibração e lacração".
 // Para peças, a data da última atualização do preço fica visível e preços
 // com mais de 90 dias recebem um alerta discreto.
 
@@ -39,10 +40,10 @@ const TIPOS = {
     icone: 'wrench',
     novo: 'Novo serviço',
     o: 'o',
-    busca: 'Buscar por nome ou descrição',
+    busca: 'Buscar pelo nome interno ou pelo nome na OS',
     coluna: 'Serviço',
     colunaValor: 'Valor',
-    exemplo: 'Ex.: Limpeza, Regulagem, Ajuste de Peso e Lacração',
+    exemplo: 'Ex.: Mão de obra – balança com compressor',
   },
   pecas: {
     titulo: 'Peças',
@@ -237,9 +238,11 @@ export async function montar(el, { params = {} } = {}) {
       ? x.codigo
         ? `<span class="secundario">Cód. ${realcar(x.codigo, termo)}</span>`
         : ''
-      : x.descricao
-        ? `<span class="secundario">${realcar(x.descricao, termo)}</span>`
-        : '';
+      : x.nome_os && x.nome_os !== x.nome
+        ? `<span class="secundario">${icone('file-text', 'i-s')} Sai na OS como: ${realcar(x.nome_os, termo)}</span>`
+        : x.descricao
+          ? `<span class="secundario">${realcar(x.descricao, termo)}</span>`
+          : '';
     return `
       <tr data-id="${x.id}" class="${x.ativo ? '' : 'inativo'}${x.id === destacarId ? ' recem' : ''}" tabindex="0">
         <td class="col-principal">
@@ -396,7 +399,7 @@ export async function montar(el, { params = {} } = {}) {
   }
 
   // -------------------------------------------------------------------------
-  // Formulário em painel lateral
+  // Formulário (janela central)
   // -------------------------------------------------------------------------
   function formHTML(x, { duplicando }) {
     const valorTexto = x.valor === undefined || x.valor === '' ? '' : numeroBR(x.valor);
@@ -409,7 +412,7 @@ export async function montar(el, { params = {} } = {}) {
         }
         <div class="grade grade-2">
           <div class="campo span-tudo" data-campo="nome">
-            <label for="cat-nome">Nome <span class="obrigatorio" aria-hidden="true">*</span></label>
+            <label for="cat-nome">${ehPeca ? 'Nome' : 'Nome interno'} <span class="obrigatorio" aria-hidden="true">*</span></label>
             <input id="cat-nome" name="nome" value="${esc(x.nome || '')}" maxlength="160" autocomplete="off" placeholder="${esc(
               T.exemplo
             )}" />
@@ -421,10 +424,10 @@ export async function montar(el, { params = {} } = {}) {
                   <label for="cat-codigo">Código <span class="opcional">(opcional)</span></label>
                   <input id="cat-codigo" name="codigo" value="${esc(x.codigo || '')}" maxlength="60" autocomplete="off" placeholder="Ref. do fabricante" />
                 </div>`
-              : `<div class="campo span-tudo" data-campo="descricao">
-                  <label for="cat-descricao">Descrição / variação <span class="opcional">(opcional)</span></label>
-                  <input id="cat-descricao" name="descricao" value="${esc(x.descricao || '')}" maxlength="160" autocomplete="off" placeholder="Ex.: Valor reduzido" />
-                  <span class="dica">Aparece abaixo do nome. Útil quando o mesmo serviço tem mais de um preço.</span>
+              : `<div class="campo span-tudo" data-campo="nome_os">
+                  <label for="cat-nome-os">Nome que sai na OS e no orçamento <span class="opcional">(opcional)</span></label>
+                  <input id="cat-nome-os" name="nome_os" value="${esc(x.nome_os || '')}" maxlength="160" autocomplete="off" placeholder="Ex.: Limpeza, regulagem, calibração e lacração" />
+                  <span class="dica">Deixe em branco se for igual ao nome interno. O técnico sempre vê o nome interno ao montar o orçamento; o cliente vê este.</span>
                 </div>`
           }
           <div class="campo" data-campo="valor">
@@ -497,7 +500,10 @@ export async function montar(el, { params = {} } = {}) {
     }
     const dados = { nome, valor, ativo: form.elements.ativo.checked };
     if (ehPeca) dados.codigo = form.elements.codigo.value.trim();
-    else dados.descricao = form.elements.descricao.value.trim();
+    else {
+      const nomeOs = form.elements.nome_os.value.trim();
+      dados.nome_os = nomeOs === nome ? '' : nomeOs;
+    }
     return dados;
   }
 
@@ -518,7 +524,6 @@ export async function montar(el, { params = {} } = {}) {
         : T.novo;
     const m = abrirModal({
       titulo,
-      painel: true,
       tamanho: 'painel-cadastro',
       corpo: formHTML(item, { duplicando }),
       acoes: [
@@ -577,7 +582,7 @@ export async function montar(el, { params = {} } = {}) {
         ? `<div class="aviso aviso-alerta">${icone('triangle-alert')}<div>Já existe uma peça com este nome por ${precos}. Confira para não cadastrar em duplicidade.</div></div>`
         : `<div class="aviso aviso-info">${icone('info')}<div>Já existe “${esc(
             iguais[0].nome
-          )}” por ${precos}. Serviços com o mesmo nome e valores diferentes ficam como itens separados — use a descrição para diferenciá-los.</div></div>`;
+          )}” por ${precos}. Para o mesmo serviço com outro preço, use um nome interno diferente (ex.: “Mão de obra – balança sem compressor”) e o mesmo nome na OS.</div></div>`;
     };
     inputNome.addEventListener('input', debounce(verificarNome, 200));
     verificarNome();
@@ -585,7 +590,7 @@ export async function montar(el, { params = {} } = {}) {
     if (duplicando) {
       setTimeout(() => {
         if (ehPeca) inputNome.select();
-        else form.elements.descricao.focus();
+        else inputNome.select();
       }, 40);
     } else if (item.nome && !editando) {
       setTimeout(() => inputValor.focus(), 40);

@@ -199,16 +199,17 @@ export function erro(e) {
 }
 
 // ---------------------------------------------------------------------------
-// Modal / painel lateral
+// Modal (janela central)
 // ---------------------------------------------------------------------------
 /**
  * Abre um modal. `corpo` pode ser HTML (string) ou um elemento.
  * `acoes`: [{ texto, classe, valor, icone, tipo: 'submit' }]
  * Retorna { el, corpo, fechar(valor), resultado: Promise }.
  */
-export function abrirModal({ titulo, corpo = '', acoes = [], tamanho = '', painel = false, aoAbrir } = {}) {
+export function abrirModal({ titulo, corpo = '', acoes = [], tamanho = '', aoAbrir } = {}) {
+  // Sempre uma janela no centro da tela (o dono preferiu a painéis laterais).
   const fundo = document.createElement('div');
-  fundo.className = `modal-fundo${painel ? ' painel-fundo' : ''}`;
+  fundo.className = 'modal-fundo';
   fundo.innerHTML = `
     <form class="modal ${esc(tamanho)}" role="dialog" aria-modal="true" aria-label="${esc(titulo)}" novalidate>
       <div class="modal-topo">

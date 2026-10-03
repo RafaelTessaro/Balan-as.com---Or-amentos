@@ -80,7 +80,8 @@ function montarDados(cfg, ordem) {
     empresa: cfg.empresa || {},
     rodape: ck.rodape || '',
     tecnicoDoc: '',
-    telefone: '',
+    documento: '',
+    rotuloDocumento: 'CPF / CNPJ',
     ncs: [],
     servicos: [],
     pecas: [],
@@ -103,14 +104,19 @@ function montarDados(cfg, ordem) {
   if (ordem) {
     const tec = (cfg.tecnicos || []).find((t) => chave(t?.nome) && chave(t.nome) === chave(o.tecnico));
     d.tecnicoDoc = texto(tec?.documento);
-    d.telefone = texto(o.cliente_telefone) || texto(o.cliente?.whatsapp) || texto(o.cliente?.telefone);
+    d.documento = texto(o.cliente_documento) || texto(o.cliente?.documento);
+    const tipo = texto(o.cliente_tipo) || texto(o.cliente?.tipo);
+    if (tipo === 'PF') d.rotuloDocumento = 'CPF';
+    else if (tipo === 'PJ') d.rotuloDocumento = 'CNPJ';
+    d.cidade = texto(o.cliente_cidade) || texto(o.cliente?.cidade);
     d.liberado = ['concluida', 'entregue'].includes(o.status);
     d.aguardando = o.status === 'aguardando_peca';
     d.ncs = d.itens.map((it, i) => ({ ...it, n: i + 1 })).filter((it) => it.obs);
     d.temNC = d.itens.some((it) => it.entrada === 'NC' || it.saida === 'NC');
     d.checklistPreenchido = d.itens.some((it) => it.entrada || it.saida);
     const itens = Array.isArray(o.itens) ? o.itens : [];
-    const linhaItem = (i) => ({ q: `${qtd(i.quantidade || 1)}×`, desc: texto(i.descricao) });
+    // Documento interno: mostra o nome interno do serviço (o PDF do cliente usa o nome na OS).
+    const linhaItem = (i) => ({ q: `${qtd(i.quantidade || 1)}×`, desc: texto(i.nome_interno) || texto(i.descricao) });
     d.servicos = itens.filter((i) => i.tipo !== 'peca' && texto(i.descricao)).map(linhaItem);
     d.pecas = itens.filter((i) => i.tipo === 'peca' && texto(i.descricao)).map(linhaItem);
   }
@@ -180,7 +186,7 @@ function cabecalho(d) {
       </div>
       <div class="cab-os">
         <div class="cab-os-rotulo">ORDEM DE SERVIÇO</div>
-        <div class="cab-os-num"><span>Nº</span><strong>${d.branco ? '' : esc(d.o.numero ?? '')}</strong></div>
+        <div class="cab-os-num"><span>Nº</span><strong>${d.branco ? '' : esc(texto(d.o.numero_os))}</strong></div>
       </div>
     </header>`;
 }
@@ -204,8 +210,8 @@ function secao1(d, p) {
       <div class="grade grade-4">
         <div class="r">Cliente</div>
         ${valor(o.cliente_nome, { forte: true })}
-        <div class="r">Telefone</div>
-        ${valor(d.telefone)}
+        <div class="r">${esc(d.rotuloDocumento)}</div>
+        ${valor(d.documento)}
 
         <div class="r">Equipamento / marca / modelo</div>
         ${valor(o.equipamento, { forte: true })}
@@ -217,13 +223,16 @@ function secao1(d, p) {
         <div class="r">Capacidade</div>
         ${valor(o.capacidade)}
 
-        <div class="r r-span2">Lacre Nº<small>Encontrados na entrada</small></div>
+        <div class="r r-span2">Lacres de entrada<small>Encontrados na balança</small></div>
         ${valorLacre(1, o.lacre1)}
-        <div class="r">Lacres aplicados</div>
-        ${valor(o.lacres_aplicados)}
+        <div class="r r-span2">Lacres de saída<small>Aplicados após o reparo</small></div>
+        ${valorLacre(1, o.lacre_saida1)}
         ${valorLacre(2, o.lacre2)}
+        ${valorLacre(2, o.lacre_saida2)}
         <div class="r">Selo de reparo Nº</div>
         ${valor(o.selo)}
+        <div class="r">Cidade</div>
+        ${valor(d.cidade)}
 
         <div class="r">Acessórios recebidos</div>
         <div class="v opcoes span3">
@@ -672,11 +681,11 @@ async function iniciar() {
   const cliente = texto(ordem?.cliente_nome);
   barraTitulo.textContent = d.branco
     ? 'Checklist técnico em branco'
-    : `Checklist técnico · OS nº ${ordem.numero}${cliente ? ` — ${cliente}` : ''}`;
+    : `Checklist técnico · OS nº ${texto(ordem.numero_os) || '—'}${cliente ? ` — ${cliente}` : ''}`;
   // O título vira o nome sugerido do arquivo ao salvar em PDF.
   document.title = d.branco
     ? 'Checklist técnico em branco · BALANÇAS.COM'
-    : `Checklist OS ${ordem.numero}${cliente ? ` - ${cliente}` : ''}`;
+    : `Checklist OS ${texto(ordem.numero_os) || ordem.numero}${cliente ? ` - ${cliente}` : ''}`;
 
   await esperarFontes();
   ajustar(d);

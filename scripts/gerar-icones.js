@@ -10,7 +10,7 @@ send mail message-circle copy save circle-check circle-x clock thumbs-up hand tr
 triangle-alert loader-circle eye minus user calendar hash scale zap cpu list-checks receipt menu
 panel-left upload rotate-ccw database phone map-pin building-2 image external-link ellipsis
 arrow-left filter refresh-cw square-check sparkles circle-help clipboard-check badge-check banknote
-percent tag history plug battery keyboard monitor wifi file-check circle-alert circle-dashed
+percent tag history plug battery keyboard monitor wifi file-check circle-alert circle-dashed sun moon sun-moon
 list-plus package-plus user-plus grip-vertical arrow-right shield-check stamp
 eye-off hard-hat plug-zap archive-restore hard-drive-download id-card arrow-up arrow-down braces lock at-sign image-up
 `.trim().split(/\s+/);

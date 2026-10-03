@@ -1620,3 +1620,72 @@ body:has(.modal.painel-cadastro) .toasts {
     bottom: 130px;
   }
 }
+
+/* ==========================================================================
+   Cadastro de cliente (PF/PJ com consulta de CNPJ)
+   ========================================================================== */
+.form-cliente {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.segmentado-largo {
+  display: flex;
+  width: 100%;
+}
+.segmentado-largo button {
+  flex: 1;
+  height: 40px;
+  font-size: var(--fs);
+}
+.doc-linha {
+  display: flex;
+  gap: 8px;
+}
+.doc-linha input {
+  flex: 1;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.doc-linha .btn[hidden] {
+  display: none;
+}
+.doc-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 0;
+  font-size: var(--fs-s);
+  color: var(--texto-suave);
+}
+.doc-status:empty {
+  display: none;
+}
+.doc-status.ok {
+  color: var(--verde-escuro);
+}
+.doc-status.alerta {
+  color: var(--alerta);
+}
+.doc-status.erro {
+  color: var(--perigo);
+}
+.sugestoes-nome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.sugestoes-nome:empty {
+  display: none;
+}
+.chip.chip-p {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.etiqueta-tipo {
+  margin-right: 4px;
+  vertical-align: 1px;
+}

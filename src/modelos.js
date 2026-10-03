@@ -7,7 +7,7 @@ const moeda = (v) =>
 function variaveis(ordem, cfg) {
   return {
     cliente: ordem.cliente_nome || 'cliente',
-    numero: String(ordem.numero),
+    numero: String(ordem.numero_os || ordem.numero),
     equipamento: ordem.equipamento || 'informado',
     total: moeda(ordem.totais.total),
     validade: String(ordem.validade_dias),
@@ -30,7 +30,7 @@ function nomeArquivoPdf(ordem) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 60);
-  return `Orcamento ${ordem.numero} - ${cliente}.pdf`;
+  return `Orcamento ${String(ordem.numero_os || ordem.numero).replace(/[\\/:*?"<>|]+/g, '-')} - ${cliente}.pdf`;
 }
 
 // Converte um telefone brasileiro para o formato do link wa.me (55 + DDD + número).

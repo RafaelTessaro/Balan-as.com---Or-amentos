@@ -8,6 +8,7 @@
 
 import { api } from './api.js';
 import { $, $$, hidratarIcones, carregandoHTML, erro, esc, icone } from './ui.js';
+import { TEMAS, aplicarTema, definirTema, preferenciaTema } from './tema.js';
 
 const ROTAS = [
   { padrao: /^\/?$/, redirecionar: '/inicio' },
@@ -151,6 +152,40 @@ $('#menu-sobreposicao').addEventListener('click', () => $('#app').classList.remo
 window.addEventListener('scroll', () => $('#topo').classList.toggle('com-borda', window.scrollY > 4), {
   passive: true,
 });
+
+// Seletor de tema (claro / escuro / igual ao Windows) no topo.
+function desenharSeletorTema() {
+  const pref = preferenciaTema();
+  const atual = TEMAS.find((t) => t.id === pref);
+  $('#btn-tema').innerHTML = icone(atual.icone);
+  $('#btn-tema').setAttribute('aria-label', `Tema: ${atual.rotulo}`);
+  $('#menu-tema').innerHTML =
+    '<div class="suspenso-titulo">Tema</div>' +
+    TEMAS.map(
+      (t) =>
+        `<button type="button" role="menuitemradio" aria-checked="${t.id === pref}" data-tema="${t.id}">${icone(t.icone)}${esc(
+          t.rotulo
+        )}${t.id === pref ? icone('check', 'i-s marca-ok') : ''}</button>`
+    ).join('');
+}
+$('#btn-tema').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const menu = $('#menu-tema');
+  menu.classList.toggle('oculto');
+  $('#btn-tema').setAttribute('aria-expanded', String(!menu.classList.contains('oculto')));
+});
+$('#menu-tema').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tema]');
+  if (!b) return;
+  definirTema(b.dataset.tema);
+  desenharSeletorTema();
+  $('#menu-tema').classList.add('oculto');
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#seletor-tema')) $('#menu-tema').classList.add('oculto');
+});
+aplicarTema();
+desenharSeletorTema();
 
 hidratarIcones(document);
 window.addEventListener('hashchange', rotear);

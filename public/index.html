@@ -4,6 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>BALANÇAS.COM — Checklist e Orçamentos</title>
+    <script>
+      // Aplica o tema salvo antes de desenhar a página (evita piscar).
+      (function () {
+        var t = 'sistema';
+        try { t = localStorage.getItem('tema') || 'sistema'; } catch (e) {}
+        var escuro = t === 'escuro' || (t === 'sistema' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.tema = escuro ? 'escuro' : 'claro';
+        document.documentElement.dataset.temaPreferido = t;
+      })();
+    </script>
     <link rel="icon" href="/img/logo-simbolo.png" />
     <link rel="stylesheet" href="/css/app.css" />
     <link rel="stylesheet" href="/css/telas.css" />
@@ -53,7 +63,12 @@
             <span data-icone="search"></span>
             <input type="search" name="q" placeholder="Buscar OS por nº, cliente, equipamento ou nº de série…" autocomplete="off" />
           </form>
-          <div class="topo-acoes" id="topo-acoes"></div>
+          <div class="topo-acoes" id="topo-acoes">
+            <div class="suspenso" id="seletor-tema">
+              <button type="button" class="btn btn-fantasma btn-icone" id="btn-tema" aria-haspopup="true" aria-expanded="false" title="Tema: claro, escuro ou igual ao Windows"></button>
+              <div class="suspenso-lista oculto" id="menu-tema" role="menu" aria-label="Tema"></div>
+            </div>
+          </div>
         </header>
         <main class="conteudo" id="conteudo" tabindex="-1"></main>
       </div>

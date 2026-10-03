@@ -9,6 +9,7 @@ function criarCadastro(tabela, campos, { busca, ordem, numericos = [] }) {
       if (dados[c] === undefined) continue;
       if (numericos.includes(c)) out[c] = Math.round((Number(dados[c]) || 0) * 100) / 100;
       else if (c === 'ativo') out[c] = dados[c] ? 1 : 0;
+      else if (c === 'tipo') out[c] = dados[c] === 'PF' ? 'PF' : 'PJ';
       else out[c] = String(dados[c] ?? '').trim();
     }
     return out;
@@ -70,12 +71,13 @@ function criarCadastro(tabela, campos, { busca, ordem, numericos = [] }) {
 
 const clientes = criarCadastro(
   'clientes',
-  ['nome', 'documento', 'telefone', 'whatsapp', 'email', 'endereco', 'cidade', 'observacoes'],
-  { busca: ['nome', 'documento', 'telefone', 'whatsapp', 'email', 'cidade'], ordem: 'nome COLLATE NOCASE' }
+  ['tipo', 'nome', 'documento', 'telefone', 'whatsapp', 'email', 'endereco', 'cidade', 'observacoes'],
+  { busca: ['nome', 'documento', 'cidade'], ordem: 'nome COLLATE NOCASE' }
 );
 
-const servicos = criarCadastro('servicos', ['nome', 'descricao', 'valor', 'ativo'], {
-  busca: ['nome', 'descricao'],
+// nome = nome interno (o técnico vê); nome_os = como sai na OS/orçamento (vazio = igual ao nome).
+const servicos = criarCadastro('servicos', ['nome', 'nome_os', 'descricao', 'valor', 'ativo'], {
+  busca: ['nome', 'nome_os', 'descricao'],
   ordem: 'nome COLLATE NOCASE, valor DESC',
   numericos: ['valor'],
 });

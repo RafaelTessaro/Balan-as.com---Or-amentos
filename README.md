@@ -14,7 +14,11 @@ O sistema substitui a planilha `Checklist_Tecnico_Orcamento_revisado.xlsm`. Os i
 
 ## Instalação no Windows (sem instalar nada)
 
-Use o **pacote completo** `BalancasOrcamentos-windows.zip`, ou a versão dividida em 2 arquivos menores que 30 MB (`BalancasOrcamentos-parte1.zip` e `BalancasOrcamentos-parte2.zip`), que cabe em anexos de e-mail e chat.
+**Baixar o pacote completo:**
+
+https://github.com/RafaelTessaro/Balan-as.com---Or-amentos/releases/latest/download/BalancasOrcamentos-windows.zip
+
+Também há uma versão dividida em 2 arquivos menores que 30 MB (`BalancasOrcamentos-parte1.zip` e `BalancasOrcamentos-parte2.zip`), que cabe em anexos de e-mail e chat.
 
 O pacote já traz:
 
@@ -41,11 +45,10 @@ Requisitos e atualização:
 - Funciona no Windows 10 e 11 de 64 bits.
 - Para atualizar, extraia a versão nova por cima da pasta antiga. A pasta `dados` é mantida.
 
-**Gerar pelo GitHub:**
+**Geração automática:**
 
-- Na aba **Actions**, escolha "Pacote para Windows" e clique em **Run workflow**.
-- O pacote é publicado em **Releases**, com link fixo: `https://github.com/RafaelTessaro/Balan-as.com---Or-amentos/releases/latest/download/BalancasOrcamentos-windows.zip`.
-- O GitHub Actions precisa estar liberado na conta.
+- O GitHub Actions (`.github/workflows/pacote-windows.yml`) gera o pacote e o publica em **Releases** a cada atualização do código, com o mesmo link fixo acima.
+- Para gerar na hora, vá à aba **Actions**, escolha "Pacote para Windows" e clique em **Run workflow**.
 
 **Gerar manualmente** (para quem mantém o sistema, em Linux/macOS com git, npm, curl, zip e unzip):
 

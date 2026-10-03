@@ -2,13 +2,14 @@
 # e publica na página de Releases do repositório, com um link fixo para baixar:
 # https://github.com/<dono>/<repositório>/releases/latest/download/BalancasOrcamentos-windows.zip
 #
-# Para gerar: aba Actions › "Pacote para Windows" › botão "Run workflow".
-# (Requer o GitHub Actions liberado na conta; em repositórios privados ele
-#  usa os minutos do plano. Para rodar a cada atualização, acrescente um
-#  gatilho "push" abaixo.)
+# Roda sozinho a cada atualização do código (exceto quando só a documentação
+# muda) e também pelo botão "Run workflow" na aba Actions.
 name: Pacote para Windows
 
 on:
+  push:
+    branches: [main, master, 'claude/**']
+    paths-ignore: ['**.md']
   workflow_dispatch:
 
 permissions:

@@ -7,9 +7,17 @@ rem -------------------------------------------------------------------
 rem  Usa o Node.js que acompanha o sistema (pasta "runtime").
 rem  Sem essa pasta (cópia baixada do GitHub), usa o Node.js instalado.
 rem -------------------------------------------------------------------
-set "NODE=runtime\node.exe"
-if exist "%NODE%" goto componentes
+if exist "runtime\node.exe" goto usar_runtime
+if not exist "runtime\montar.bat" goto usar_instalado
+rem Pacote dividido em 2 arquivos: junta as partes do Node.js na primeira vez.
+call "runtime\montar.bat"
+if errorlevel 1 goto parar
 
+:usar_runtime
+set "NODE=runtime\node.exe"
+goto componentes
+
+:usar_instalado
 set "NODE=node"
 where node >nul 2>nul
 if errorlevel 1 goto sem_node
@@ -40,6 +48,10 @@ echo.> "dados\.atalho-criado"
 "%NODE%" --no-warnings server.js
 pause
 exit /b 0
+
+:parar
+pause
+exit /b 1
 
 :sem_node
 echo.

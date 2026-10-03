@@ -14,11 +14,7 @@ O sistema substitui a planilha `Checklist_Tecnico_Orcamento_revisado.xlsm`. Os i
 
 ## Instalação no Windows (sem instalar nada)
 
-Use o **pacote completo** `BalancasOrcamentos-windows.zip`. Para baixar:
-
-**https://github.com/RafaelTessaro/Balan-as.com---Or-amentos/releases/latest/download/BalancasOrcamentos-windows.zip**
-
-O pacote fica também na página **Releases** do repositório.
+Use o **pacote completo** `BalancasOrcamentos-windows.zip`, ou a versão dividida em 2 arquivos menores que 30 MB (`BalancasOrcamentos-parte1.zip` e `BalancasOrcamentos-parte2.zip`), que cabe em anexos de e-mail e chat.
 
 O pacote já traz:
 
@@ -34,17 +30,28 @@ Não precisa instalar nem baixar mais nada.
 
 Na primeira vez, o atalho **"Orcamentos BALANCAS.COM"** é criado na Área de Trabalho.
 
+**Versão em 2 partes:**
+
+- Extraia só a parte 1.
+- Deixe o arquivo `BalancasOrcamentos-parte2.zip` na pasta Downloads, ou dentro da pasta do sistema.
+- O `iniciar.bat` junta as partes na primeira vez e confere a soma SHA-256 oficial do Node.js.
+
 Requisitos e atualização:
 
 - Funciona no Windows 10 e 11 de 64 bits.
 - Para atualizar, extraia a versão nova por cima da pasta antiga. A pasta `dados` é mantida.
 
-O pacote é gerado e publicado automaticamente pelo GitHub Actions (`.github/workflows/pacote-windows.yml`) a cada atualização do código.
+**Gerar pelo GitHub:**
 
-Para gerar o pacote manualmente (para quem mantém o sistema, em Linux/macOS com git, npm, curl, zip e unzip):
+- Na aba **Actions**, escolha "Pacote para Windows" e clique em **Run workflow**.
+- O pacote é publicado em **Releases**, com link fixo: `https://github.com/RafaelTessaro/Balan-as.com---Or-amentos/releases/latest/download/BalancasOrcamentos-windows.zip`.
+- O GitHub Actions precisa estar liberado na conta.
+
+**Gerar manualmente** (para quem mantém o sistema, em Linux/macOS com git, npm, curl, zip e unzip):
 
 ```bash
-npm run empacotar      # gera dist/BalancasOrcamentos-windows.zip
+npm run empacotar                # dist/BalancasOrcamentos-windows.zip (≈ 46 MB)
+npm run empacotar -- --dividir   # dist/BalancasOrcamentos-parte1.zip e -parte2.zip (< 30 MB cada)
 ```
 
 O script usa a última versão commitada e instala só os componentes de produção. Ele também baixa o `node.exe` oficial de nodejs.org e confere a soma SHA-256 publicada.

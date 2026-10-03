@@ -1,0 +1,51 @@
+# Gera o pacote completo para Windows (sistema + componentes + Node.js portátil)
+# e publica na página de Releases do repositório, com um link fixo para baixar:
+# https://github.com/<dono>/<repositório>/releases/latest/download/BalancasOrcamentos-windows.zip
+name: Pacote para Windows
+
+on:
+  push:
+    branches: [main, master, 'claude/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pacote-windows
+  cancel-in-progress: true
+
+jobs:
+  pacote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Gerar o pacote
+        run: npm run empacotar
+
+      - name: Publicar em Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete pacote-windows --yes --cleanup-tag || true
+          cat > notas.md <<'NOTAS'
+          Pacote completo para Windows 10/11 (64 bits): sistema, componentes e Node.js portátil oficial.
+          Não é preciso instalar nem baixar mais nada.
+
+          **Como usar**
+          1. Baixe `BalancasOrcamentos-windows.zip` (abaixo, em *Assets*).
+          2. Clique com o botão direito no arquivo e escolha **Extrair tudo...** para uma pasta fixa (ex.: `C:\BalancasOrcamentos`).
+          3. Dê dois cliques em `iniciar.bat`. O navegador abre em http://localhost:3000.
+
+          Para atualizar, extraia a versão nova por cima da pasta antiga: a pasta `dados` é mantida.
+          NOTAS
+          gh release create pacote-windows dist/BalancasOrcamentos-windows.zip \
+            --target "$GITHUB_SHA" \
+            --title "Pacote completo para Windows ($(date -u +%d/%m/%Y))" \
+            --notes-file notas.md \
+            --latest

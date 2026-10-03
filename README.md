@@ -14,7 +14,13 @@ O sistema substitui a planilha `Checklist_Tecnico_Orcamento_revisado.xlsm`. Os i
 
 ## Instalação no Windows (sem instalar nada)
 
-Use o **pacote completo** `BalancasOrcamentos-windows.zip`. Ele já traz:
+Use o **pacote completo** `BalancasOrcamentos-windows.zip`. Para baixar:
+
+**https://github.com/RafaelTessaro/Balan-as.com---Or-amentos/releases/latest/download/BalancasOrcamentos-windows.zip**
+
+O pacote fica também na página **Releases** do repositório.
+
+O pacote já traz:
 
 - o sistema;
 - os componentes;
@@ -33,7 +39,9 @@ Requisitos e atualização:
 - Funciona no Windows 10 e 11 de 64 bits.
 - Para atualizar, extraia a versão nova por cima da pasta antiga. A pasta `dados` é mantida.
 
-Como gerar o pacote (para quem mantém o sistema, em Linux/macOS com git, npm, curl, zip e unzip):
+O pacote é gerado e publicado automaticamente pelo GitHub Actions (`.github/workflows/pacote-windows.yml`) a cada atualização do código.
+
+Para gerar o pacote manualmente (para quem mantém o sistema, em Linux/macOS com git, npm, curl, zip e unzip):
 
 ```bash
 npm run empacotar      # gera dist/BalancasOrcamentos-windows.zip

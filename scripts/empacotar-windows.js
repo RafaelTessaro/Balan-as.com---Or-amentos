@@ -95,7 +95,7 @@ if not exist "node.exe.parte2" goto faltando
 :juntar
 echo   Juntando as partes do Node.js...
 copy /b "node.exe.parte1" + "node.exe.parte2" "node.exe" >nul
-certutil -hashfile "node.exe" SHA256 | findstr /i "%ESPERADO%" >nul
+certutil -hashfile "node.exe" SHA256 | findstr /i /l /c:"%ESPERADO%" >nul
 if errorlevel 1 goto corrompido
 del "node.exe.parte1" "node.exe.parte2" >nul 2>nul
 echo   Pronto.

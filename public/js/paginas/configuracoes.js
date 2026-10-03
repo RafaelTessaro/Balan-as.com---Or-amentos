@@ -635,7 +635,7 @@ export async function montar(el, { query = {} } = {}) {
               <div class="grade">
                 ${areaTexto({ caminho: 'whatsapp.mensagem', rotulo: 'Mensagem', linhas: 8, grupo: 'whatsapp' })}
                 ${variaveisHTML('whatsapp')}
-                <span class="dica">Dica: *texto* fica em negrito e _texto_ em itálico no WhatsApp.</span>
+                <span class="dica-mensagem">Dica: *texto* fica em <b>negrito</b> e _texto_ em <i>itálico</i> no WhatsApp.</span>
               </div>
               <div class="previa">
                 <span class="rotulo">${icone('eye', 'i-s')}Pré-visualização</span>
@@ -673,7 +673,7 @@ export async function montar(el, { query = {} } = {}) {
               </div>
             </div>`,
         }) +
-        `<div class="aviso">${icone('history')}<div><b>Cópias automáticas:</b> cada vez que o sistema é iniciado, uma cópia do banco de dados é salva na pasta <code>dados/backups</code> (as 20 mais recentes são mantidas). As imagens personalizadas do papel timbrado ficam na pasta <code>dados</code> e não entram no arquivo .json.</div></div>`
+        `<div class="aviso">${icone('history')}<div><b>Cópias automáticas:</b> cada vez que o sistema é iniciado, uma cópia do banco de dados é salva na pasta <code>dados/backups</code> (as 20 mais recentes são mantidas). O arquivo .json inclui também as imagens personalizadas do papel timbrado.</div></div>`
       );
     },
   };
@@ -927,6 +927,11 @@ export async function montar(el, { query = {} } = {}) {
   // -------------------------------------------------------------------------
   // Navegação entre seções
   // -------------------------------------------------------------------------
+  function ajustarAltura(ta) {
+    ta.style.height = 'auto';
+    ta.style.height = `${Math.min(ta.scrollHeight + 2, 420)}px`;
+  }
+
   function desenharSecao({ rolar = false } = {}) {
     const s = SECOES.find((x) => x.id === secaoAtual);
     areaSecao.innerHTML = `
@@ -936,6 +941,7 @@ export async function montar(el, { query = {} } = {}) {
       </header>
       <div class="pilha">${SECAO_HTML[secaoAtual]()}</div>`;
     hidratarIcones(areaSecao);
+    $$('textarea[data-caminho]', areaSecao).forEach(ajustarAltura);
     $$('.config-nav-item', raiz).forEach((b) => {
       const sel = b.dataset.secao === secaoAtual;
       b.classList.toggle('ativo', sel);
@@ -962,9 +968,17 @@ export async function montar(el, { query = {} } = {}) {
     $$('.config-nav-item', raiz).forEach((b) => b.classList.toggle('alterado', alteradas.includes(b.dataset.secao)));
     barra.classList.toggle('oculto', !alteradas.length);
     if (alteradas.length) {
-      const nomes = alteradas.map((k) => `<b>${esc(SECOES.find((s) => s.id === k).titulo)}</b>`);
-      const lista = nomes.length > 1 ? `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}` : nomes[0];
-      $('.barra-salvar-texto span', barra).innerHTML = `Alterações não salvas em ${lista}`;
+      const titulos = alteradas.map((k) => SECOES.find((s) => s.id === k).titulo);
+      const nomes = titulos.map((t) => `<b>${esc(t)}</b>`);
+      const lista =
+        nomes.length > 3
+          ? `<b>${nomes.length} seções</b>`
+          : nomes.length > 1
+            ? `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`
+            : nomes[0];
+      const texto = $('.barra-salvar-texto span', barra);
+      texto.innerHTML = `Alterações não salvas em ${lista}`;
+      texto.title = titulos.join(', ');
     }
   }
 
@@ -1248,8 +1262,17 @@ export async function montar(el, { query = {} } = {}) {
       toast('Conexão com o servidor de e-mail funcionando.');
     } catch (e) {
       if (!ativo) return;
-      resultado.innerHTML = `<span class="vermelho">${icone('circle-alert', 'i-s')}Falhou</span>`;
-      erro(e);
+      const msg = String(e.message || '');
+      let explicacao = msg;
+      if (/ENOTFOUND|EDNS|getaddrinfo/i.test(msg)) {
+        explicacao = 'Servidor SMTP não encontrado. Confira o endereço do servidor e a conexão com a internet.';
+      } else if (/ETIMEDOUT|timeout|ECONNREFUSED/i.test(msg)) {
+        explicacao = 'O servidor não respondeu. Confira a porta e a opção de conexão segura (465 com SSL ligado, 587 desligado).';
+      } else if (/wrong version number|ssl3_get_record|tls/i.test(msg)) {
+        explicacao = 'Conexão segura incompatível com a porta. Use 465 com SSL/TLS ligado ou 587 com SSL/TLS desligado.';
+      }
+      resultado.innerHTML = `<span class="vermelho" title="${esc(msg)}">${icone('circle-alert', 'i-s')}Falhou</span>`;
+      toast(explicacao, 'erro');
     } finally {
       botao.disabled = false;
       botao.innerHTML = htmlOriginal;
@@ -1347,6 +1370,7 @@ export async function montar(el, { query = {} } = {}) {
         if (t.dataset.tipo === 'int') v = t.value === '' ? '' : Number(t.value);
       }
       definirCaminho(estado, t.dataset.caminho, v);
+      if (t.tagName === 'TEXTAREA') ajustarAltura(t);
     } else if (t.matches('[data-item-checklist]')) {
       estado.checklist.itens[Number(t.dataset.itemChecklist)] = t.value;
       redesenharSugestoes();
@@ -1564,10 +1588,11 @@ export async function montar(el, { query = {} } = {}) {
     temAlteracoes,
     async sair() {
       if (!temAlteracoes()) return true;
-      const alteradas = secoesAlteradas().map((k) => SECOES.find((s) => s.id === k).titulo);
+      const t = secoesAlteradas().map((k) => SECOES.find((s) => s.id === k).titulo);
+      const lista = t.length > 1 ? `${t.slice(0, -1).join(', ')} e ${t[t.length - 1]}` : t[0];
       return confirmar({
         titulo: 'Sair sem salvar?',
-        mensagem: `Há alterações não salvas em ${alteradas.join(', ')}. Se sair agora, elas serão perdidas.`,
+        mensagem: `Há alterações não salvas em ${lista}. Se sair agora, elas serão perdidas.`,
         confirmar: 'Sair sem salvar',
         cancelar: 'Continuar editando',
         perigo: true,

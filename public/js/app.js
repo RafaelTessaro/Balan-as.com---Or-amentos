@@ -24,6 +24,7 @@ const ROTAS = [
 const conteudo = $('#conteudo');
 let telaAtual = null;
 let hashAtual = null;
+let navegacao = 0; // identifica a navegação mais recente
 let ignorarProxima = false;
 
 function lerHash() {
@@ -58,6 +59,8 @@ async function rotear() {
       return;
     }
   }
+  const minha = ++navegacao;
+  const atual = () => minha === navegacao;
   telaAtual?.desmontar?.();
   telaAtual = null;
   hashAtual = location.hash;
@@ -73,19 +76,29 @@ async function rotear() {
 
   $$('.menu-item[data-rota]').forEach((a) => a.classList.toggle('ativo', a.dataset.rota === rota.menu));
   $('#app').classList.remove('menu-aberto');
-  conteudo.classList.remove('largo');
-  conteudo.innerHTML = carregandoHTML();
+  // Cada tela recebe um contêiner novo: os eventos da tela anterior somem com ele
+  // e uma tela que termina de carregar depois da navegação não aparece por cima.
+  const tela = document.createElement('div');
+  tela.className = 'tela';
+  tela.innerHTML = carregandoHTML();
+  conteudo.replaceChildren(tela);
   window.scrollTo(0, 0);
 
   try {
     const modulo = await import(`./paginas/${rota.modulo}.js`);
-    if (hashAtual !== location.hash) return; // usuário já navegou para outra tela
-    conteudo.innerHTML = '';
-    telaAtual = (await modulo.montar(conteudo, { params, query })) || {};
-    hidratarIcones(conteudo);
+    if (!atual()) return;
+    tela.innerHTML = '';
+    const r = (await modulo.montar(tela, { params, query })) || {};
+    if (!atual()) {
+      r.desmontar?.();
+      return;
+    }
+    telaAtual = r;
+    hidratarIcones(tela);
   } catch (e) {
+    if (!atual()) return;
     erro(e);
-    conteudo.innerHTML = `<div class="vazio">${icone('triangle-alert', 'i-xg')}<h3>Não foi possível abrir esta tela</h3><p>${esc(
+    tela.innerHTML = `<div class="vazio">${icone('triangle-alert', 'i-xg')}<h3>Não foi possível abrir esta tela</h3><p>${esc(
       e.message
     )}</p><a class="btn" href="#/inicio">Voltar ao início</a></div>`;
   }

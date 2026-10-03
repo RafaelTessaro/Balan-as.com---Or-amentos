@@ -41,7 +41,12 @@
   color: var(--texto);
   font-weight: 650;
 }
-.resumo-lista .ponto,
+.resumo-lista > span + span::before {
+  content: '•';
+  margin-right: 8px;
+  color: var(--texto-fraco);
+  font-weight: 400;
+}
 .tela-cadastro .texto-fraco {
   color: var(--texto-fraco);
 }
@@ -201,6 +206,10 @@
   width: 1%;
   white-space: nowrap;
 }
+.etiqueta-inativo {
+  display: none;
+  margin-top: 4px;
+}
 .tabela-catalogo tr.inativo .destaque,
 .tabela-catalogo tr.inativo .preco-rapido {
   color: var(--texto-suave);
@@ -353,6 +362,14 @@
 }
 .caixa-interruptor .trilho {
   margin-top: 1px;
+}
+.campo > label.caixa-interruptor {
+  font-size: var(--fs);
+  font-weight: 450;
+  color: var(--texto);
+}
+.caixa-interruptor .dica {
+  font-weight: 400;
 }
 .dica.bloco {
   display: block;
@@ -913,7 +930,23 @@
   font-weight: 600;
 }
 
+/* Botões de remover discretos (vermelhos só ao passar o mouse) */
+.tela-config .btn-perigo.btn-fantasma {
+  color: var(--texto-suave);
+}
+.tela-config .btn-perigo.btn-fantasma:hover {
+  color: var(--perigo);
+  background: var(--perigo-fundo);
+}
+.tela-config .campo textarea {
+  overflow-y: auto;
+}
+
 /* Mensagens com variáveis e pré-visualização */
+.dica-mensagem {
+  font-size: var(--fs-xs);
+  color: var(--texto-suave);
+}
 .modelo-mensagem {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
@@ -1279,6 +1312,10 @@ mark.var-erro {
 .barra-salvar-texto .i {
   color: #fbbf24;
 }
+.barra-salvar .grupo-botoes {
+  margin-left: auto;
+  flex-wrap: nowrap;
+}
 .barra-salvar .btn-fantasma {
   color: #e9eaea;
 }
@@ -1286,8 +1323,9 @@ mark.var-erro {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
-/* Mantém os avisos (toasts) acima da barra de salvar enquanto ela estiver visível. */
-body:has(.barra-salvar:not(.oculto)) .toasts {
+/* Mantém os avisos (toasts) acima da barra de salvar e do rodapé dos painéis. */
+body:has(.barra-salvar:not(.oculto)) .toasts,
+body:has(.modal.painel-cadastro) .toasts {
   bottom: 92px;
 }
 
@@ -1330,6 +1368,12 @@ body:has(.barra-salvar:not(.oculto)) .toasts {
 }
 
 @media (max-width: 1024px) {
+  .tela-cadastro .tabela-catalogo .col-status {
+    display: none !important;
+  }
+  .tabela-catalogo .etiqueta-inativo {
+    display: table;
+  }
   .tela-cadastro .tabela-clientes .col-cidade,
   .tela-cadastro .tabela-clientes .acoes-linha [data-acao='editar'] {
     display: none !important;
@@ -1367,6 +1411,14 @@ body:has(.barra-salvar:not(.oculto)) .toasts {
   }
   .tela-cadastro .barra-ferramentas .chips {
     overflow-x: auto;
+  }
+  .tela-cadastro .resumo-lista {
+    margin-left: 0;
+    flex-basis: 100%;
+    gap: 2px 14px;
+  }
+  .resumo-lista > span + span::before {
+    display: none;
   }
   .tela-cadastro .tabela-cartoes thead {
     display: none;
@@ -1438,21 +1490,18 @@ body:has(.barra-salvar:not(.oculto)) .toasts {
     grid-column: 1;
     grid-row: 1;
   }
+  .tabela-catalogo:not(.com-data) .col-principal {
+    grid-row: 1 / span 2;
+  }
   .tabela-catalogo .col-valor {
     grid-column: 2;
     grid-row: 1;
     text-align: right;
   }
-  .tabela-catalogo .col-status {
-    grid-column: 1;
-    grid-row: 2;
-    display: flex !important;
-    align-items: center;
-    gap: 8px;
-  }
   .tabela-catalogo .col-data {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 2;
+    align-self: center;
     display: flex !important;
     flex-wrap: wrap;
     align-items: center;
@@ -1472,10 +1521,11 @@ body:has(.barra-salvar:not(.oculto)) .toasts {
   .tabela-catalogo .col-data .etiqueta-alerta {
     margin-top: 0;
   }
-  .tabela-catalogo .acoes-linha {
+  .tela-cadastro .tabela-catalogo .acoes-linha {
     grid-column: 2;
-    grid-row: 2 / span 2;
+    grid-row: 2;
     align-self: end;
+    margin-right: -6px;
   }
   .tabela-catalogo .preco-rapido .i {
     display: none;

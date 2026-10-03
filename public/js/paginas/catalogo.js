@@ -207,10 +207,10 @@ export async function montar(el, { params = {} } = {}) {
         `<span class="resumo-alerta" title="Preço sem atualização há mais de ${DIAS_DESATUALIZADO} dias">${icone(
           'clock',
           'i-s'
-        )}${velhos} sem atualizar há +${DIAS_DESATUALIZADO} dias</span>`
+        )}${velhos} ${velhos === 1 ? 'preço' : 'preços'} com mais de ${DIAS_DESATUALIZADO} dias</span>`
       );
     }
-    areaResumo.innerHTML = partes.join('<span class="ponto" aria-hidden="true">•</span>');
+    areaResumo.innerHTML = partes.join('');
   }
 
   function celulaData(x) {
@@ -245,6 +245,7 @@ export async function montar(el, { params = {} } = {}) {
         <td class="col-principal">
           <span class="destaque">${realcar(x.nome, termo)}</span>
           ${sub}
+          ${x.ativo ? '' : '<span class="etiqueta etiqueta-inativo">Inativo</span>'}
         </td>
         <td class="valor col-valor">
           <button type="button" class="preco-rapido" data-acao="preco" title="Alterar o valor">
@@ -320,7 +321,7 @@ export async function montar(el, { params = {} } = {}) {
               <th>${esc(T.coluna)}</th>
               <th class="valor">${esc(T.colunaValor)}</th>
               ${ehPeca ? '<th>Última atualização</th>' : ''}
-              <th>Situação</th>
+              <th class="col-status">Situação</th>
               <th class="acoes-linha"><span class="sr">Ações</span></th>
             </tr>
           </thead>
@@ -402,12 +403,8 @@ export async function montar(el, { params = {} } = {}) {
     return `
       <div class="form-cadastro">
         ${
-          duplicando
-            ? `<div class="aviso aviso-info">${icone('copy')}<div>${
-                ehPeca
-                  ? 'Cópia de uma peça existente. Ajuste o nome, o código e o valor antes de salvar.'
-                  : 'Cópia de um serviço existente. Use a <b>descrição</b> para diferenciar as variações (ex.: “Valor reduzido”) e ajuste o valor.'
-              }</div></div>`
+          duplicando && ehPeca
+            ? `<div class="aviso aviso-info">${icone('copy')}<div>Cópia de uma peça existente. Ajuste o nome, o código e o valor antes de salvar.</div></div>`
             : ''
         }
         <div class="grade grade-2">

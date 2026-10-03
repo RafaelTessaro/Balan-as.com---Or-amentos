@@ -246,7 +246,12 @@ export function abrirModal({ titulo, corpo = '', acoes = [], tamanho = '', paine
     resolver(valor);
   };
   const teclas = (e) => {
-    if (e.key === 'Escape') fechar(undefined);
+    if (e.key !== 'Escape') return;
+    // Com modais empilhados (ex.: confirmação sobre um painel), fecha só o de cima.
+    const abertos = document.querySelectorAll('.modal-fundo');
+    if (abertos[abertos.length - 1] !== fundo) return;
+    e.stopImmediatePropagation();
+    fechar(undefined);
   };
   document.addEventListener('keydown', teclas);
 

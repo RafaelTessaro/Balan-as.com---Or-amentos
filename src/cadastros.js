@@ -46,12 +46,20 @@ function criarCadastro(tabela, campos, { busca, ordem, numericos = [] }) {
       const d = normalizar(dados);
       if (d.nome !== undefined && !d.nome) throw Object.assign(new Error('Informe o nome.'), { status: 400 });
       const cols = Object.keys(d);
-      if (!cols.length) return this.obter(id);
-      db.prepare(`UPDATE ${tabela} SET ${cols.map((c) => `${c} = ?`).join(', ')}, atualizado_em = ? WHERE id = ?`).run(
-        ...Object.values(d),
-        agora(),
-        id
-      );
+      const atual = this.obter(id);
+      if (!atual) return null;
+      if (!cols.length) return atual;
+      // No catálogo, "atualizado_em" é a data da última alteração de PREÇO
+      // (como a coluna "Última atualização" da planilha); nos clientes, de qualquer campo.
+      const temPreco = campos.includes('valor');
+      const mudouPreco = d.valor !== undefined && d.valor !== atual.valor;
+      const sets = cols.map((c) => `${c} = ?`);
+      const params = Object.values(d);
+      if (!temPreco || mudouPreco) {
+        sets.push('atualizado_em = ?');
+        params.push(agora());
+      }
+      db.prepare(`UPDATE ${tabela} SET ${sets.join(', ')} WHERE id = ?`).run(...params, id);
       return this.obter(id);
     },
     excluir(id) {

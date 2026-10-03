@@ -33,4 +33,23 @@ function restaurar(nome) {
   if (ehPersonalizado(nome)) fs.unlinkSync(personalizado(nome));
 }
 
-module.exports = { caminho, ehPersonalizado, salvar, restaurar };
+// Para o backup em JSON: imagens personalizadas como data URL (ou null).
+function exportar() {
+  const out = {};
+  for (const nome of Object.keys(PADRAO)) {
+    out[nome] = ehPersonalizado(nome)
+      ? `data:image/png;base64,${fs.readFileSync(personalizado(nome)).toString('base64')}`
+      : null;
+  }
+  return out;
+}
+
+function importar(imagens) {
+  for (const nome of Object.keys(PADRAO)) {
+    if (!imagens || !(nome in imagens)) continue;
+    if (imagens[nome]) salvar(nome, imagens[nome]);
+    else restaurar(nome);
+  }
+}
+
+module.exports = { caminho, ehPersonalizado, salvar, restaurar, exportar, importar };

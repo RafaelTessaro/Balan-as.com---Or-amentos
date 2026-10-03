@@ -205,6 +205,7 @@ const TABELAS = ['config', 'clientes', 'servicos', 'pecas', 'ordens', 'ordem_ite
 api.get('/backup', (req, res) => {
   const dados = { sistema: 'balancas-orcamentos', versao: 1, gerado_em: new Date().toISOString() };
   for (const t of TABELAS) dados[t] = db.prepare(`SELECT * FROM ${t}`).all().map((r) => ({ ...r }));
+  dados.imagens = imagens.exportar();
   const nome = `backup-balancas-${new Date().toISOString().slice(0, 10)}.json`;
   res.setHeader('Content-Disposition', `attachment; filename="${nome}"`);
   res.json(dados);
@@ -227,6 +228,7 @@ api.post('/backup/restaurar', (req, res) => {
       }
     }
   });
+  imagens.importar(dados.imagens);
   res.json({ ok: true });
 });
 
@@ -241,7 +243,7 @@ api.use((err, req, res, next) => {
   if (status >= 500) console.error(err);
   let msg = err.message || 'Erro inesperado.';
   if (err.code === 'EAUTH') msg = 'Usuário ou senha do e-mail recusados pelo servidor SMTP.';
-  else if (['ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'ENOTFOUND'].includes(err.code)) {
+  else if (['ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'ENOTFOUND', 'EDNS', 'ECONNREFUSED'].includes(err.code)) {
     msg = 'Não foi possível conectar ao servidor de e-mail. Verifique o endereço, a porta e a internet.';
   }
   res.status(status).json({ erro: msg });

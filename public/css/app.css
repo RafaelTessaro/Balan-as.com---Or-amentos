@@ -378,7 +378,7 @@ textarea {
   margin: 0 auto;
   padding: 8px 28px 48px;
 }
-.conteudo.largo {
+.conteudo:has(> .tela.largo) {
   max-width: none;
 }
 
@@ -1332,6 +1332,15 @@ select.entrada {
 }
 .painel-fundo .modal-rodape {
   border-radius: 0;
+}
+.painel-fundo .modal {
+  min-width: 0;
+}
+.painel-fundo .modal-corpo {
+  flex: 1;
+}
+.modal-rodape {
+  flex-wrap: wrap;
 }
 @keyframes aparecer {
   from {

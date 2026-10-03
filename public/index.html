@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BALANÇAS.COM — Checklist e Orçamentos</title>
+    <link rel="icon" href="/img/logo-simbolo.png" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/telas.css" />
+    <link rel="stylesheet" href="/css/cadastros.css" />
+  </head>
+  <body>
+    <div class="app" id="app">
+      <aside class="menu" id="menu" aria-label="Menu principal">
+        <a class="marca" href="#/inicio">
+          <img src="/img/logo-simbolo.png" alt="" />
+          <div>
+            <div class="marca-nome">BALANÇAS.COM</div>
+            <div class="marca-sub">Checklist &amp; Orçamentos</div>
+          </div>
+        </a>
+
+        <a class="btn btn-primario btn-nova" href="#/ordens/nova" title="Nova ordem de serviço" data-icone="plus">
+          <span>Nova OS</span>
+        </a>
+
+        <div class="menu-grupo">Operação</div>
+        <a class="menu-item" href="#/inicio" data-rota="inicio" data-icone="layout-dashboard" title="Início"><span>Início</span></a>
+        <a class="menu-item" href="#/ordens" data-rota="ordens" data-icone="clipboard-list" title="Ordens de serviço">
+          <span>Ordens de serviço</span><b class="contador oculto" id="contador-abertas"></b>
+        </a>
+        <a class="menu-item" href="#/clientes" data-rota="clientes" data-icone="users" title="Clientes"><span>Clientes</span></a>
+
+        <div class="menu-grupo">Catálogo</div>
+        <a class="menu-item" href="#/servicos" data-rota="servicos" data-icone="wrench" title="Serviços"><span>Serviços</span></a>
+        <a class="menu-item" href="#/pecas" data-rota="pecas" data-icone="package" title="Peças"><span>Peças</span></a>
+
+        <div class="menu-rodape">
+          <a class="menu-item" href="/imprimir/checklist?branco=1" target="_blank" rel="noopener" data-icone="printer" title="Checklist em branco (A4)">
+            <span>Checklist em branco</span>
+          </a>
+          <a class="menu-item" href="#/configuracoes" data-rota="configuracoes" data-icone="settings" title="Configurações">
+            <span>Configurações</span>
+          </a>
+        </div>
+      </aside>
+      <div class="menu-sobreposicao" id="menu-sobreposicao"></div>
+
+      <div class="principal">
+        <header class="topo" id="topo">
+          <button class="btn btn-fantasma btn-icone btn-menu" id="btn-menu" aria-label="Abrir menu" data-icone="menu"></button>
+          <form class="busca-global" id="busca-global" role="search">
+            <span data-icone="search"></span>
+            <input type="search" name="q" placeholder="Buscar OS por nº, cliente, equipamento ou nº de série…" autocomplete="off" />
+          </form>
+          <div class="topo-acoes" id="topo-acoes"></div>
+        </header>
+        <main class="conteudo" id="conteudo" tabindex="-1"></main>
+      </div>
+    </div>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>

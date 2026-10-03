@@ -37,6 +37,10 @@ const COR = {
   branco: '#FFFFFF',
 };
 
+// Identificadores usados para manter o quadro de totais junto da última tabela.
+const ID_ULTIMA_TABELA = 'ultima-tabela-itens';
+const ID_TOTAIS = 'quadro-totais';
+
 // ---------------------------------------------------------------------------
 // Formatação (pt-BR)
 // ---------------------------------------------------------------------------
@@ -466,7 +470,7 @@ function cabecalhoSimples(cfg) {
           {
             width: '*',
             stack: [
-              { text: texto(e.nome) || 'Orçamento', fontSize: 17, bold: true, color: COR.grafite, characterSpacing: 0.3 },
+              { text: texto(e.nome), fontSize: 17, bold: true, color: COR.grafite, characterSpacing: 0.3 },
               e.subtitulo ? { text: texto(e.subtitulo), fontSize: 8.5, color: COR.verdeEscuro, margin: [0, 1, 0, 0] } : '',
             ],
           },
@@ -678,9 +682,6 @@ function montarConteudo(ordem, cfg) {
   if (!cfg.orcamento || cfg.orcamento.mostrarAceite !== false) conteudo.push(blocoAceite(cfg));
   return conteudo.filter(Boolean);
 }
-
-const ID_ULTIMA_TABELA = 'ultima-tabela-itens';
-const ID_TOTAIS = 'quadro-totais';
 
 // Evita que o quadro de totais fique sozinho no alto de uma página, separado
 // da tabela de itens: se a última tabela é curta e coube inteira na página

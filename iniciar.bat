@@ -45,6 +45,8 @@ if not errorlevel 1 echo   Atalho "Orcamentos BALANCAS.COM" criado na Área de T
 echo.> "dados\.atalho-criado"
 
 :iniciar
+rem Usa o proxy do sistema (se houver) na consulta de CNPJ.
+set "NODE_USE_ENV_PROXY=1"
 "%NODE%" --no-warnings server.js
 pause
 exit /b 0

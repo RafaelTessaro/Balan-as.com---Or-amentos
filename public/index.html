@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>BALANÇAS.COM — Checklist e Orçamentos</title>
     <script>
       // Aplica o tema salvo antes de desenhar a página (evita piscar).
@@ -39,19 +40,24 @@
         <a class="menu-item" href="#/ordens" data-rota="ordens" data-icone="clipboard-list" title="Ordens de serviço">
           <span>Ordens de serviço</span><b class="contador oculto" id="contador-abertas"></b>
         </a>
-        <a class="menu-item" href="#/clientes" data-rota="clientes" data-icone="users" title="Clientes"><span>Clientes</span></a>
 
-        <div class="menu-grupo">Catálogo</div>
+        <div class="menu-grupo">Cadastros</div>
+        <a class="menu-item" href="#/clientes" data-rota="clientes" data-icone="users" title="Clientes"><span>Clientes</span></a>
         <a class="menu-item" href="#/servicos" data-rota="servicos" data-icone="wrench" title="Serviços"><span>Serviços</span></a>
         <a class="menu-item" href="#/pecas" data-rota="pecas" data-icone="package" title="Peças"><span>Peças</span></a>
 
         <div class="menu-rodape">
+          <div class="menu-grupo">Sistema</div>
           <a class="menu-item" href="/imprimir/checklist?branco=1" target="_blank" rel="noopener" data-icone="printer" title="Checklist em branco (A4)">
             <span>Checklist em branco</span>
           </a>
           <a class="menu-item" href="#/configuracoes" data-rota="configuracoes" data-icone="settings" title="Configurações">
             <span>Configurações</span>
           </a>
+          <div class="suspenso seletor-tema" id="seletor-tema">
+            <button type="button" class="menu-item" id="btn-tema" aria-haspopup="true" aria-expanded="false" title="Tema"></button>
+            <div class="suspenso-lista oculto" id="menu-tema" role="menu" aria-label="Tema"></div>
+          </div>
         </div>
       </aside>
       <div class="menu-sobreposicao" id="menu-sobreposicao"></div>
@@ -59,16 +65,7 @@
       <div class="principal">
         <header class="topo" id="topo">
           <button class="btn btn-fantasma btn-icone btn-menu" id="btn-menu" aria-label="Abrir menu" data-icone="menu"></button>
-          <form class="busca-global" id="busca-global" role="search">
-            <span data-icone="search"></span>
-            <input type="search" name="q" placeholder="Buscar OS por nº, cliente, equipamento ou nº de série…" autocomplete="off" />
-          </form>
-          <div class="topo-acoes" id="topo-acoes">
-            <div class="suspenso" id="seletor-tema">
-              <button type="button" class="btn btn-fantasma btn-icone" id="btn-tema" aria-haspopup="true" aria-expanded="false" title="Tema: claro, escuro ou igual ao Windows"></button>
-              <div class="suspenso-lista oculto" id="menu-tema" role="menu" aria-label="Tema"></div>
-            </div>
-          </div>
+          <a class="marca marca-topo" href="#/inicio"><img src="/img/logo-simbolo.png" alt="" /><span class="marca-nome">BALANÇAS.COM</span></a>
         </header>
         <main class="conteudo" id="conteudo" tabindex="-1"></main>
       </div>

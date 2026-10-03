@@ -2,11 +2,25 @@
 
 Sistema que roda **no próprio computador da oficina** para os técnicos:
 
-1. **Checklist técnico**: o técnico identifica a balança e o cliente, marca os acessórios recebidos, o defeito relatado e a tensão, e preenche o checklist funcional (C / NC / N/A) na entrada e após a manutenção.
+1. **Checklist técnico**: o técnico informa o **nº da OS** (gerado no sistema de ordens de serviço) e identifica o cliente e a balança. Depois registra:
+   - os lacres 1 e 2 de entrada e de saída;
+   - os acessórios recebidos, o defeito relatado e a tensão;
+   - o checklist funcional (C / NC / N/A), na entrada e após a manutenção.
 2. **Serviços e peças**: busca no catálogo ou cadastra na hora, com quantidade e valor. Também aceita item avulso, só para aquela OS.
+   - Os serviços têm um **nome interno**, que é o que o técnico vê, e um **nome que sai na OS**.
+   - Exemplo: "Mão de obra – balança com compressor" (R$ 190), "sem compressor" (R$ 150) e "PET" (R$ 120) saem como "Limpeza, regulagem, calibração e lacração".
 3. **Orçamento em PDF**: o sistema monta o orçamento no papel timbrado da empresa, com totais, desconto, validade, prazo, formas de pagamento, garantia e campo de aceite.
 4. **Envio ao cliente**: por WhatsApp (baixa o PDF e abre a conversa com a mensagem pronta), por e-mail (envia o PDF em anexo) ou por download/impressão.
 5. **Checklist em A4**: imprime o checklist preenchido de qualquer OS, ou em branco para preencher à mão.
+
+**Clientes:**
+
+- Pessoa física: nome, CPF e cidade.
+- Pessoa jurídica: CNPJ, nome e cidade.
+- Ao digitar o CNPJ, o sistema consulta a Receita Federal (BrasilAPI, com CNPJá, Minha Receita e ReceitaWS como alternativas) e preenche a razão social e a cidade.
+- O CNPJ alfanumérico (em vigor desde julho/2026) também é aceito.
+
+**Tema:** claro, escuro ou igual ao Windows. O seletor fica no rodapé do menu e em Configurações › Aparência. O PDF e o checklist impresso saem sempre no tema claro.
 
 O sistema substitui a planilha `Checklist_Tecnico_Orcamento_revisado.xlsm`. Os itens do checklist, os serviços e peças já cadastrados e o papel timbrado vieram dela.
 
@@ -87,7 +101,7 @@ Se o Windows perguntar sobre o Firewall na primeira vez, permita o acesso em **r
 | **Início** | Indicadores do mês, andamento das OS por situação, atalhos |
 | **Nova OS** | Abre uma ordem de serviço nova (o número é automático) |
 | **Ordens de serviço** | Lista com busca (nº, cliente, equipamento, série, técnico) e filtro por situação |
-| **Clientes** | Cadastro de clientes (também dá para cadastrar de dentro da OS) |
+| **Clientes** | Pessoas físicas e jurídicas, com consulta automática do CNPJ (também dá para cadastrar de dentro da OS) |
 | **Serviços / Peças** | Catálogo com valores. Peças mostram a data da última atualização de preço |
 | **Checklist em branco** | Folha A4 para imprimir e preencher à mão |
 | **Configurações** | Dados da empresa, textos do orçamento, papel timbrado, itens do checklist, técnicos, e-mail, WhatsApp e backup |
@@ -151,7 +165,7 @@ Para trocar de computador:
 - **Portaria Inmetro 457/2021 (ordem de serviço de permissionária)**: a OS registra:
   - nº de série;
   - PAM (portaria de aprovação de modelo);
-  - lacres encontrados na entrada e lacres aplicados;
+  - lacres 1 e 2 encontrados na entrada e aplicados na saída;
   - selo de reparo;
   - técnico, com o documento dele no checklist impresso;
   - dados da empresa.

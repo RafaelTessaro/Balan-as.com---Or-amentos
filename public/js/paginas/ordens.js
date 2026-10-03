@@ -164,7 +164,5 @@ export async function montar(el, { query }) {
 
   await Promise.all([desenharFiltros(), carregar()]);
   hidratarIcones(el);
-  const campoBusca = $('#busca-global input');
-  if (campoBusca) campoBusca.value = '';
   return {};
 }

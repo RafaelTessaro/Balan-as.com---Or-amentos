@@ -28,8 +28,15 @@ import {
   lerArquivo,
   lerTexto,
 } from '../ui.js';
+import { definirTema, preferenciaTema } from '../tema.js';
 
 const SECOES = [
+  {
+    id: 'aparencia',
+    titulo: 'Aparência',
+    icone: 'sun-moon',
+    texto: 'Tema claro, escuro ou igual ao Windows. A escolha vale para este computador e é aplicada na hora.',
+  },
   {
     id: 'empresa',
     titulo: 'Empresa',
@@ -53,12 +60,6 @@ const SECOES = [
     titulo: 'Técnicos',
     icone: 'hard-hat',
     texto: 'Quem executa os serviços. O técnico é escolhido em cada ordem de serviço.',
-  },
-  {
-    id: 'numeracao',
-    titulo: 'Numeração',
-    icone: 'hash',
-    texto: 'Número das ordens de serviço (OS).',
   },
   {
     id: 'email',
@@ -170,7 +171,7 @@ export async function montar(el, { query = {} } = {}) {
 
   let original = extrair(cfg);
   let estado = clonar(original);
-  let secaoAtual = SECOES.some((s) => s.id === query.secao) ? query.secao : 'empresa';
+  let secaoAtual = SECOES.some((s) => s.id === query.secao) ? query.secao : 'aparencia';
   let versaoImagens = Date.now();
   let ignorarAlteracoes = false;
   let salvando = false;
@@ -315,6 +316,30 @@ export async function montar(el, { query = {} } = {}) {
   // Seções
   // -------------------------------------------------------------------------
   const SECAO_HTML = {
+    aparencia() {
+      const pref = preferenciaTema();
+      return cartao({
+        icone: 'sun-moon',
+        titulo: 'Tema',
+        texto: 'O PDF do orçamento e o checklist impresso saem sempre no tema claro.',
+        corpo: `
+          <div class="segmentado segmentado-largo seletor-tema-config" role="radiogroup" aria-label="Tema">
+            ${[
+              ['claro', 'sun', 'Claro'],
+              ['sistema', 'monitor', 'Igual ao Windows'],
+              ['escuro', 'moon', 'Escuro'],
+            ]
+              .map(
+                ([id, ic, rot]) =>
+                  `<button type="button" role="radio" data-definir-tema="${id}" aria-pressed="${pref === id}" aria-checked="${
+                    pref === id
+                  }">${icone(ic, 'i-s')}${rot}</button>`
+              )
+              .join('')}
+          </div>`,
+      });
+    },
+
     empresa() {
       return (
         cartao({
@@ -871,7 +896,7 @@ export async function montar(el, { query = {} } = {}) {
   function preencherExemplo(modelo) {
     const vars = {
       cliente: 'Supermercado Bom Preço',
-      numero: String(proximoNumero()),
+      numero: '12345',
       equipamento: 'Balança Toledo Prix 4 Uno',
       total: moeda(470),
       validade: String(estado.orcamento.validadeDias || 10),
@@ -899,7 +924,7 @@ export async function montar(el, { query = {} } = {}) {
         <div class="previa-linha"><span>Para</span><b>compras@bompreco.com.br</b></div>
         <div class="previa-linha"><span>Assunto</span><b>${preencherExemplo(estado.email.assunto)}</b></div>
         <div class="previa-corpo">${preencherExemplo(estado.email.mensagem)}</div>
-        <div class="previa-anexo">${icone('file-text', 'i-s')}Orcamento ${proximoNumero()} - Supermercado Bom Preco.pdf</div>`;
+        <div class="previa-anexo">${icone('file-text', 'i-s')}Orcamento 12345 - Supermercado Bom Preco.pdf</div>`;
     }
     const wpp = $('[data-previa="whatsapp"]', areaSecao);
     if (wpp) {
@@ -1425,6 +1450,17 @@ export async function montar(el, { query = {} } = {}) {
   });
 
   raiz.addEventListener('click', (e) => {
+    const botaoTema = e.target.closest('[data-definir-tema]');
+    if (botaoTema) {
+      definirTema(botaoTema.dataset.definirTema);
+      $$('[data-definir-tema]', raiz).forEach((b) => {
+        const sel = b === botaoTema;
+        b.setAttribute('aria-pressed', String(sel));
+        b.setAttribute('aria-checked', String(sel));
+      });
+      window.dispatchEvent(new Event('tema-menu-atualizar'));
+      return;
+    }
     const alvo = (sel) => e.target.closest(sel);
     let b;
 

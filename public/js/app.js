@@ -128,19 +128,14 @@ window.addEventListener('beforeunload', (e) => {
   }
 });
 
-// Busca global → lista de ordens filtrada.
-$('#busca-global').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const q = e.target.q.value.trim();
-  navegar(`/ordens${q ? `?q=${encodeURIComponent(q)}` : ''}`);
-  e.target.q.blur();
-});
-
-// Atalho "/" para focar a busca.
+// Atalho "/" para focar a busca da tela atual.
 document.addEventListener('keydown', (e) => {
   if (e.key === '/' && !/input|textarea|select/i.test(document.activeElement.tagName)) {
-    e.preventDefault();
-    $('#busca-global input').focus();
+    const busca = $('#conteudo input[type="search"], #conteudo .busca input');
+    if (busca) {
+      e.preventDefault();
+      busca.focus();
+    }
   }
 });
 
@@ -148,16 +143,12 @@ document.addEventListener('keydown', (e) => {
 $('#btn-menu').addEventListener('click', () => $('#app').classList.toggle('menu-aberto'));
 $('#menu-sobreposicao').addEventListener('click', () => $('#app').classList.remove('menu-aberto'));
 
-// Borda no topo ao rolar.
-window.addEventListener('scroll', () => $('#topo').classList.toggle('com-borda', window.scrollY > 4), {
-  passive: true,
-});
 
 // Seletor de tema (claro / escuro / igual ao Windows) no topo.
 function desenharSeletorTema() {
   const pref = preferenciaTema();
   const atual = TEMAS.find((t) => t.id === pref);
-  $('#btn-tema').innerHTML = icone(atual.icone);
+  $('#btn-tema').innerHTML = `${icone(atual.icone)}<span>Tema: ${esc(atual.rotulo)}</span>`;
   $('#btn-tema').setAttribute('aria-label', `Tema: ${atual.rotulo}`);
   $('#menu-tema').innerHTML =
     '<div class="suspenso-titulo">Tema</div>' +
@@ -186,6 +177,7 @@ document.addEventListener('click', (e) => {
 });
 aplicarTema();
 desenharSeletorTema();
+window.addEventListener('tema-menu-atualizar', desenharSeletorTema);
 
 hidratarIcones(document);
 window.addEventListener('hashchange', rotear);

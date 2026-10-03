@@ -24,8 +24,8 @@
   color: var(--texto-suave);
 }
 .tela-cadastro .chip[aria-pressed='true'] .n {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
+  background: color-mix(in srgb, var(--superficie) 20%, transparent);
+  color: var(--superficie);
 }
 .resumo-lista {
   margin-left: auto;
@@ -104,7 +104,7 @@
 }
 .tela-cadastro .btn-nova-os:hover {
   background: var(--verde-claro);
-  border-color: #b9dcc7;
+  border-color: color-mix(in srgb, var(--verde) 45%, transparent);
 }
 .tela-cadastro tr.recem td {
   animation: destacar-linha 2.4s ease-out;
@@ -289,7 +289,7 @@
 .tela-config .campo.erro input:focus,
 .tela-config .campo.erro textarea:focus {
   border-color: var(--perigo);
-  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.16);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--perigo) 18%, transparent);
 }
 .modal .modal-rodape .a-esquerda {
   margin-right: auto;
@@ -388,23 +388,34 @@
 /* ==========================================================================
    Configurações
    ========================================================================== */
+/* Seções das configurações em abas no topo (nada escondido na lateral) */
 .config-layout {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 28px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
 }
 .config-nav {
   position: sticky;
-  top: calc(var(--altura-topo) + 10px);
+  top: 0;
+  z-index: 12;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px;
+  flex-direction: row;
+  gap: 4px;
+  padding: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
   background: var(--superficie);
   border: 1px solid var(--borda);
-  border-radius: var(--raio-g);
-  box-shadow: var(--sombra-1);
+  border-radius: var(--raio);
+}
+.config-nav::-webkit-scrollbar {
+  display: none;
+}
+.config-nav .config-nav-item {
+  flex: none;
+  width: auto;
+  white-space: nowrap;
 }
 .config-nav-item {
   display: flex;
@@ -447,8 +458,8 @@
   height: 8px;
   margin-left: auto;
   border-radius: 50%;
-  background: #e3a008;
-  box-shadow: 0 0 0 3px #fff3d6;
+  background: var(--alerta);
+  box-shadow: 0 0 0 3px var(--alerta-fundo);
 }
 .config-nav-item.alterado .ponto-alterado {
   display: block;
@@ -494,7 +505,7 @@
   color: var(--texto);
 }
 .tela-config .aviso code {
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--superficie) 60%, transparent);
 }
 
 /* Campos com sufixo ("dias") ou botão interno (mostrar senha) */
@@ -574,7 +585,7 @@
   transition: border-color 0.12s, box-shadow 0.12s;
 }
 .editor-chips:hover {
-  border-color: #b4bbb7;
+  border-color: var(--texto-suave);
 }
 .editor-chips:focus-within {
   border-color: var(--verde);
@@ -586,7 +597,7 @@
   gap: 2px;
   height: 30px;
   padding: 0 4px 0 11px;
-  border: 1px solid #cde8d8;
+  border: 1px solid color-mix(in srgb, var(--verde) 30%, transparent);
   border-radius: 999px;
   background: var(--verde-claro);
   color: var(--verde-escuro);
@@ -611,7 +622,7 @@
 .chip-item button:focus-visible {
   outline: none;
   opacity: 1;
-  background: rgba(6, 122, 59, 0.12);
+  background: color-mix(in srgb, var(--verde) 15%, transparent);
 }
 .chip-item button .i {
   width: 14px;
@@ -749,15 +760,15 @@
 }
 
 .cartao-sugestoes {
-  border-color: #efe2bf;
-  background: linear-gradient(180deg, #fffcf3 0%, var(--superficie) 140px);
+  border-color: color-mix(in srgb, var(--alerta) 25%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--alerta-fundo) 55%, var(--superficie)) 0%, var(--superficie) 140px);
 }
 .cartao-sugestoes .cartao-topo {
-  border-bottom-color: #f3e9cf;
+  border-bottom-color: color-mix(in srgb, var(--alerta) 18%, transparent);
 }
 .icone-redondo.dourado {
   background: var(--alerta-fundo);
-  color: #a86a00;
+  color: var(--alerta);
 }
 .lista-sugestoes {
   display: grid;
@@ -838,7 +849,7 @@
   flex-direction: column;
   gap: 2px;
   padding: 14px 18px;
-  border: 1px solid #cde8d8;
+  border: 1px solid color-mix(in srgb, var(--verde) 30%, transparent);
   border-radius: var(--raio);
   background: var(--verde-claro);
 }
@@ -971,7 +982,7 @@
 .chip-variavel {
   height: 26px;
   padding: 0 8px;
-  border: 1px dashed #b5d8c3;
+  border: 1px dashed color-mix(in srgb, var(--verde) 45%, transparent);
   border-radius: 6px;
   background: var(--verde-claro);
   color: var(--verde-escuro);
@@ -1287,8 +1298,8 @@ mark.var-erro {
   margin-top: 22px;
   padding: 10px 10px 10px 18px;
   border-radius: var(--raio-g);
-  background: #2b2c2e;
-  color: #fff;
+  background: var(--texto);
+  color: var(--fundo);
   box-shadow: var(--sombra-3);
   animation: barra-subir 0.2s ease-out;
 }
@@ -1303,29 +1314,31 @@ mark.var-erro {
   align-items: center;
   gap: 10px;
   font-size: var(--fs-s);
-  color: #e9eaea;
+  color: color-mix(in srgb, var(--fundo) 85%, transparent);
 }
 .barra-salvar-texto b {
-  color: #fff;
-  font-weight: 650;
+  color: var(--fundo);
+  font-weight: 600;
 }
 .barra-salvar-texto .i {
-  color: #fbbf24;
+  color: #f2c25b;
+}
+[data-tema='escuro'] .barra-salvar-texto .i {
+  color: #8a5300;
 }
 .barra-salvar .grupo-botoes {
   margin-left: auto;
   flex-wrap: nowrap;
 }
 .barra-salvar .btn-fantasma {
-  color: #e9eaea;
+  color: color-mix(in srgb, var(--fundo) 85%, transparent);
 }
 .barra-salvar .btn-fantasma:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: color-mix(in srgb, var(--fundo) 12%, transparent);
+  color: var(--fundo);
 }
-/* Mantém os avisos (toasts) acima da barra de salvar e do rodapé dos painéis. */
-body:has(.barra-salvar:not(.oculto)) .toasts,
-body:has(.modal.painel-cadastro) .toasts {
+/* Mantém os avisos (toasts) acima da barra de salvar. */
+body:has(.barra-salvar:not(.oculto)) .toasts {
   bottom: 92px;
 }
 
@@ -1347,7 +1360,7 @@ body:has(.modal.painel-cadastro) .toasts {
     gap: 16px;
   }
   .config-nav {
-    top: var(--altura-topo);
+    top: 0;
     z-index: 12;
     flex-direction: row;
     overflow-x: auto;
@@ -1688,4 +1701,10 @@ body:has(.modal.painel-cadastro) .toasts {
 .etiqueta-tipo {
   margin-right: 4px;
   vertical-align: 1px;
+}
+
+@media (max-width: 768px) {
+  .config-nav {
+    top: var(--altura-topo);
+  }
 }

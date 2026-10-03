@@ -116,7 +116,7 @@ export async function montar(el) {
           <a class="acao-rapida" href="#/ordens/nova"><span class="icone-redondo">${icone('clipboard-list')}</span><span><strong>Nova OS</strong><small>Checklist de entrada da balança</small></span>${icone('chevron-right')}</a>
           <a class="acao-rapida" href="#/pecas"><span class="icone-redondo">${icone('package')}</span><span><strong>Catálogo de peças</strong><small>Preços e datas de atualização</small></span>${icone('chevron-right')}</a>
           <a class="acao-rapida" href="#/servicos"><span class="icone-redondo">${icone('wrench')}</span><span><strong>Catálogo de serviços</strong><small>Valores padrão de mão de obra</small></span>${icone('chevron-right')}</a>
-          <a class="acao-rapida" href="#/clientes"><span class="icone-redondo">${icone('users')}</span><span><strong>Clientes</strong><small>Contatos para envio do orçamento</small></span>${icone('chevron-right')}</a>
+          <a class="acao-rapida" href="#/clientes"><span class="icone-redondo">${icone('users')}</span><span><strong>Clientes</strong><small>Pessoas físicas e jurídicas</small></span>${icone('chevron-right')}</a>
         </div>
       </div>
     </div>

@@ -10,11 +10,12 @@
 // caiba sempre em uma página.
 
 import { api } from '/js/api.js';
-import { esc, dataBR, qtd, icone, STATUS_ROTULO } from '/js/ui.js';
+import { esc, dataBR, qtd, icone } from '/js/ui.js';
 
 const PX_POR_MM = 96 / 25.4;
 const ALTURA_UTIL_MM = 276; // 297 mm − 2 × 10 mm de margem, com 1 mm de folga
 const H_LINHA_MM = 7; // altura mínima de uma linha para escrita à mão
+const BORDA_MM = 0.2;
 
 const params = new URLSearchParams(location.search);
 const ordemId = Number(params.get('id')) || 0;
@@ -30,6 +31,8 @@ const barraTitulo = document.getElementById('barra-titulo');
 // ---------------------------------------------------------------------------
 // Utilitários
 // ---------------------------------------------------------------------------
+const texto = (v) => String(v ?? '').trim();
+
 const chave = (s) =>
   String(s ?? '')
     .normalize('NFD')
@@ -44,8 +47,6 @@ function marcacao(v) {
     .replace(/[^A-Z]/g, '');
   return s === 'C' || s === 'NC' || s === 'NA' ? s : '';
 }
-
-const texto = (v) => String(v ?? '').trim();
 
 /** Lista de opções da configuração + valores da OS que não estão na lista (marcados). */
 function opcoesCom(base, selecionados) {
@@ -62,7 +63,10 @@ function opcoesCom(base, selecionados) {
   return lista;
 }
 
-const cortar = (t, n) => (n >= t.length ? t : `${t.slice(0, n).replace(/[\s,.;:–-]+$/, '')}…`);
+/** Corta o texto em n caracteres, terminando com reticências. */
+const cortar = (t, n) => (n >= t.length ? t : `${t.slice(0, Math.max(0, n)).replace(/[\s,.;:–-]+$/, '')}…`);
+
+const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
 // ---------------------------------------------------------------------------
 // Dados
@@ -77,6 +81,9 @@ function montarDados(cfg, ordem) {
     rodape: ck.rodape || '',
     tecnicoDoc: '',
     telefone: '',
+    ncs: [],
+    servicos: [],
+    pecas: [],
   };
 
   const itensOrdem = Array.isArray(o.checklist) ? o.checklist.filter((c) => texto(c?.item)) : [];
@@ -87,7 +94,7 @@ function montarDados(cfg, ordem) {
         saida: marcacao(c.saida),
         obs: texto(c.obs),
       }))
-    : (ck.itens || []).map((item) => ({ item, entrada: '', saida: '', obs: '' }));
+    : (ck.itens || []).map((item) => ({ item: texto(item), entrada: '', saida: '', obs: '' }));
 
   d.acessorios = opcoesCom(ck.acessorios || [], Array.isArray(o.acessorios) ? o.acessorios : []);
   d.tensoesEntrada = opcoesCom(ck.tensoesEntrada || [], [o.tensao_entrada]);
@@ -99,10 +106,9 @@ function montarDados(cfg, ordem) {
     d.telefone = texto(o.cliente_telefone) || texto(o.cliente?.whatsapp) || texto(o.cliente?.telefone);
     d.liberado = ['concluida', 'entregue'].includes(o.status);
     d.aguardando = o.status === 'aguardando_peca';
-    d.ncs = d.itens
-      .map((it, i) => ({ ...it, n: i + 1 }))
-      .filter((it) => it.obs);
+    d.ncs = d.itens.map((it, i) => ({ ...it, n: i + 1 })).filter((it) => it.obs);
     d.temNC = d.itens.some((it) => it.entrada === 'NC' || it.saida === 'NC');
+    d.checklistPreenchido = d.itens.some((it) => it.entrada || it.saida);
     const itens = Array.isArray(o.itens) ? o.itens : [];
     const linhaItem = (i) => ({ q: `${qtd(i.quantidade || 1)}×`, desc: texto(i.descricao) });
     d.servicos = itens.filter((i) => i.tipo !== 'peca' && texto(i.descricao)).map(linhaItem);
@@ -143,10 +149,11 @@ const valorLacre = (n, v) =>
 
 const linhasEscrita = (n) => `<div class="linhas">${'<i></i>'.repeat(Math.max(1, n))}</div>`;
 
-/** Bloco de várias linhas com altura fixa (n linhas de 7 mm). */
-function bloco({ tipo, n, conteudo = '', classe = '' }) {
-  const corpo = conteudo ? `<div class="conteudo">${conteudo}</div>` : linhasEscrita(n);
-  return `<div class="bloco${classe ? ` ${classe}` : ''}" data-tipo="${tipo}" style="height:${n * H_LINHA_MM}mm">${corpo}</div>`;
+/** Bloco de várias linhas com altura fixa (n linhas de 7 mm + a borda inferior). */
+function bloco({ tipo, n, conteudo = null, classe = '' }) {
+  const corpo = conteudo === null ? linhasEscrita(n) : `<div class="conteudo">${conteudo}</div>`;
+  const altura = n * H_LINHA_MM + BORDA_MM;
+  return `<div class="bloco${classe ? ` ${classe}` : ''}" data-tipo="${tipo}" style="height:${altura}mm">${corpo}</div>`;
 }
 
 const tituloSecao = (n, titulo) => `<div class="secao-titulo"><span class="n">${n}</span><h2>${esc(titulo)}</h2></div>`;
@@ -191,8 +198,6 @@ function linhaEntrada(d) {
 
 function secao1(d, p) {
   const o = d.o;
-  const outros = texto(o.acessorios_outros);
-  const defeito = texto(o.defeito_relatado);
   return `
     <section class="secao s1">
       ${tituloSecao(1, 'Identificação do equipamento')}
@@ -223,7 +228,7 @@ function secao1(d, p) {
         <div class="r">Acessórios recebidos</div>
         <div class="v opcoes span3">
           ${d.acessorios.map(opcao).join('')}
-          <span class="outros"><span>Outros:</span><span class="linha">${esc(outros)}</span></span>
+          <span class="outros"><span>Outros:</span><span class="linha">${esc(texto(o.acessorios_outros))}</span></span>
         </div>
 
         <div class="r topo">Defeito relatado / solicitação do cliente</div>
@@ -231,7 +236,7 @@ function secao1(d, p) {
           tipo: 'texto',
           n: p.linhas.defeito,
           classe: 'span3',
-          conteudo: d.branco ? '' : `<p>${esc(defeito)}</p>`,
+          conteudo: d.branco ? null : `<p>${esc(texto(o.defeito_relatado))}</p>`,
         })}
 
         <div class="r">Tensão de entrada</div>
@@ -245,12 +250,20 @@ function secao1(d, p) {
 const marcasLinha = (v) =>
   ['C', 'NC', 'NA'].map((m, j) => `<td class="m${j === 0 ? ' sep' : ''}">${caixa(v === m ? m : '')}</td>`).join('');
 
-function listaNC(ncs, limite = ncs.length) {
-  const mostrar = limite < ncs.length ? ncs.slice(0, Math.max(0, limite - 1)) : ncs;
-  const resto = ncs.length - mostrar.length;
-  const lis = mostrar.map((it) => `<li><b>${it.n}. ${esc(it.item)}:</b> ${esc(it.obs)}</li>`);
-  if (resto > 0) lis.push(`<li class="mais">+ ${resto} ${resto === 1 ? 'registro' : 'registros'} na OS</li>`);
-  return `<ul class="lista-nc${ncs.length > 3 ? ' colunas' : ''}">${lis.join('')}</ul>`;
+/**
+ * Detalhes das não conformidades (itens do checklist com observação).
+ * modo 'linhas': uma por linha; modo 'fluxo': texto corrido (mais compacto).
+ * k: quantas mostrar inteiras; parcial: nº de caracteres da observação seguinte (cortada).
+ */
+function htmlNC(ncs, { modo = 'linhas', k = ncs.length, parcial = 0 } = {}) {
+  const visiveis = ncs.slice(0, k);
+  if (parcial > 0 && ncs[k]) visiveis.push({ ...ncs[k], obs: cortar(ncs[k].obs, parcial) });
+  const resto = ncs.length - visiveis.length;
+  const entradas = visiveis.map((it) => `<span class="nc"><b>${it.n}. ${esc(it.item)}:</b> ${esc(it.obs)}</span>`);
+  if (resto > 0) entradas.push(`<span class="mais">+ ${plural(resto, 'registro', 'registros')} na OS</span>`);
+  return modo === 'linhas'
+    ? `<ul class="lista-nc">${entradas.map((e) => `<li>${e}</li>`).join('')}</ul>`
+    : `<p class="nc-fluxo">${entradas.join('<span class="sep"> • </span>')}</p>`;
 }
 
 function secao2(d, p) {
@@ -275,11 +288,11 @@ function secao2(d, p) {
        <span class="item-leg">${caixa('NC', 'cx-mini')} NC = Não conforme</span>
        <span class="item-leg">${caixa('NA', 'cx-mini')} N/A = Não se aplica</span>`;
 
-  let detalhes = '';
+  let detalhes = null; // em branco: linhas de escrita
   if (!d.branco) {
-    if (d.ncs.length) detalhes = listaNC(d.ncs);
-    else if (!d.temNC) detalhes = '<p class="vazio">Nenhuma não conformidade registrada.</p>';
-    else detalhes = '<p></p>';
+    if (d.ncs.length) detalhes = htmlNC(d.ncs);
+    else if (d.checklistPreenchido && !d.temNC) detalhes = '<p class="vazio">Nenhuma não conformidade registrada.</p>';
+    else detalhes = '';
   }
 
   return `
@@ -316,52 +329,62 @@ function secao2(d, p) {
     </section>`;
 }
 
-function conteudoServico(d, limite = Infinity) {
+/**
+ * Conteúdo do bloco "Serviço executado / peças substituídas" (sem valores).
+ * modo 'lista': serviços e peças em colunas, um por linha; 'fluxo': texto corrido por grupo.
+ * limite: máximo de itens por grupo (o excedente vira "+ N itens"); textoMax: caracteres do texto.
+ */
+function htmlServico(d, { modo = 'lista', limite = Infinity, textoMax = Infinity } = {}) {
   const partes = [];
   const t = texto(d.o.servico_executado);
-  if (t) partes.push(`<p>${esc(t)}</p>`);
+  if (t) partes.push(`<p class="txt-servico">${esc(cortar(t, textoMax))}</p>`);
+
   const grupo = (titulo, lista) => {
     if (!lista.length) return '';
-    const max = Math.max(1, limite);
-    const mostrar = lista.length > max ? lista.slice(0, max - 1) : lista;
+    const max = Math.max(0, limite);
+    const mostrar = lista.length > max ? lista.slice(0, max) : lista;
     const resto = lista.length - mostrar.length;
-    const lis = mostrar.map((i) => `<li><b>${esc(i.q)}</b>${esc(i.desc)}</li>`);
-    if (resto > 0) lis.push(`<li class="mais">+ ${resto} ${resto === 1 ? 'item' : 'itens'}</li>`);
-    return `<div class="grupo"><div class="grupo-t">${titulo}</div><ul>${lis.join('')}</ul></div>`;
+    const mais = resto > 0 ? `+ ${plural(resto, 'item', 'itens')}` : '';
+    if (modo === 'lista') {
+      const lis = mostrar.map((i) => `<li><b>${esc(i.q)}</b>${esc(i.desc)}</li>`);
+      if (mais) lis.push(`<li class="mais">${mais}</li>`);
+      return `<div class="grupo"><div class="grupo-t">${titulo}</div><ul>${lis.join('')}</ul></div>`;
+    }
+    const itens = mostrar.map((i) => `<span class="it"><b>${esc(i.q)}</b> ${esc(i.desc)}</span>`);
+    if (mais) itens.push(`<span class="mais">${mais}</span>`);
+    return `<p class="grupo-fluxo"><span class="grupo-t">${titulo}:</span> ${itens.join('<span class="sep"> · </span>')}</p>`;
   };
+
   const gs = [grupo('Serviços', d.servicos), grupo('Peças', d.pecas)].filter(Boolean);
-  if (gs.length) partes.push(`<div class="itens-os${gs.length > 1 ? ' duas' : ''}">${gs.join('')}</div>`);
+  if (gs.length) {
+    const classe = modo === 'lista' ? `itens-os${gs.length > 1 ? ' duas' : ''}` : 'itens-os fluxo';
+    partes.push(`<div class="${classe}">${gs.join('')}</div>`);
+  }
   return partes.join('');
 }
 
 function secao3(d, p) {
   const o = d.o;
-  const obs = texto(o.observacoes);
   const comSituacao = d.liberado || d.aguardando;
-  const situacaoAtual =
-    !d.branco && !comSituacao && o.status
-      ? `<span class="situacao-atual">No sistema: ${esc(STATUS_ROTULO[o.status] || o.status_rotulo || o.status)}</span>`
-      : '';
-  const servico = d.branco ? '' : conteudoServico(d);
+  const tecnico = !d.branco && texto(o.tecnico) ? [texto(o.tecnico), d.tecnicoDoc].filter(Boolean).join(' · ') : '';
   return `
     <section class="secao s3">
       ${tituloSecao(3, 'Serviço executado, peças e observações')}
       <div class="grade grade-2 elastico">
         <div class="r topo">Serviço executado / peças substituídas</div>
         <div class="bloco" data-tipo="servico">${
-          d.branco ? '<div class="linhas"></div>' : `<div class="conteudo">${servico}</div>`
+          d.branco ? '<div class="linhas"></div>' : `<div class="conteudo">${htmlServico(d)}</div>`
         }</div>
       </div>
       <div class="grade grade-2">
         <div class="r topo">Observações / pendências / recomendações ao cliente</div>
-        ${bloco({ tipo: 'texto', n: p.linhas.obs, conteudo: d.branco ? '' : `<p>${esc(obs)}</p>` })}
+        ${bloco({ tipo: 'texto', n: p.linhas.obs, conteudo: d.branco ? null : `<p>${esc(texto(o.observacoes))}</p>` })}
       </div>
       <div class="grade grade-4">
         <div class="r">Situação</div>
         <div class="v opcoes">
           ${opcao({ rotulo: 'Liberado', marcada: d.liberado })}
           ${opcao({ rotulo: 'Aguardando peça', marcada: d.aguardando })}
-          ${situacaoAtual}
         </div>
         <div class="r">Data da situação</div>
         ${comSituacao ? valorData(o.data_situacao) : guiaData}
@@ -369,12 +392,7 @@ function secao3(d, p) {
       <div class="assinaturas">
         <div class="ass">
           <div class="linha-ass"></div>
-          <div class="leg">Assinatura do técnico</div>
-          ${
-            !d.branco && texto(o.tecnico)
-              ? `<div class="nome">${esc(o.tecnico)}${d.tecnicoDoc ? ` · ${esc(d.tecnicoDoc)}` : ''}</div>`
-              : ''
-          }
+          <div class="leg">Assinatura do técnico${tecnico ? `<span class="nome"> — ${esc(tecnico)}</span>` : ''}</div>
         </div>
         <div class="ass">
           <div class="linha-ass"></div>
@@ -394,19 +412,143 @@ function rodape(d) {
 }
 
 // ---------------------------------------------------------------------------
+// Encaixe de textos (versão preenchida)
+// ---------------------------------------------------------------------------
+const pt = (el, v) => (el.style.fontSize = `${v.toFixed(2)}pt`);
+const ptAtual = (el) => parseFloat(getComputedStyle(el).fontSize) * 0.75; // px → pt
+const cabeLargura = (el) => el.scrollWidth <= el.clientWidth + 0.5;
+const cabeAltura = (el) => el.scrollHeight <= el.clientHeight + 0.5;
+
+/** Reduz a fonte até `condicao()` ser verdadeira ou chegar ao mínimo. */
+function reduzirAte(el, condicao, maximo, minimo, passo = 0.2) {
+  let v = maximo;
+  pt(el, v);
+  while (!condicao() && v > minimo) {
+    v = Math.max(minimo, v - passo);
+    pt(el, v);
+  }
+  return condicao();
+}
+
+/** Corta o texto do elemento (busca binária) até `condicao()` ser verdadeira. */
+function cortarAte(el, original, condicao) {
+  let lo = 0;
+  let hi = original.length;
+  while (lo < hi) {
+    const meio = Math.ceil((lo + hi) / 2);
+    el.textContent = cortar(original, meio);
+    if (condicao()) lo = meio;
+    else hi = meio - 1;
+  }
+  el.textContent = cortar(original, lo);
+}
+
+/**
+ * Textos de uma linha: reduz a fonte; se ainda não couber, quebra em até 2 linhas
+ * (reduzindo mais um pouco) e, em último caso, corta com "…".
+ */
+function encaixarLinhasSimples() {
+  for (const el of pagina.querySelectorAll('.ck td.item, .opcoes')) {
+    if (cabeLargura(el) || reduzirAte(el, () => cabeLargura(el), ptAtual(el), 6.6)) continue;
+    if (el.classList.contains('opcoes')) el.classList.add('quebra'); // muitas opções: quebra a linha
+  }
+  for (const el of pagina.querySelectorAll('.v .t, .outros .linha')) {
+    if (cabeLargura(el)) continue;
+    if (reduzirAte(el, () => cabeLargura(el), ptAtual(el), 7.6)) continue;
+    el.classList.add('duas');
+    if (reduzirAte(el, () => cabeAltura(el), 7.6, 6.2)) continue;
+    cortarAte(el, el.textContent, () => cabeAltura(el));
+  }
+}
+
+const cabeNoBloco = (b) => {
+  const c = b.querySelector('.conteudo');
+  return !c || c.offsetHeight <= b.clientHeight + 0.5;
+};
+
+function encaixarTexto(b) {
+  const c = b.querySelector('.conteudo');
+  if (!c || reduzirAte(c, () => cabeNoBloco(b), 8.4, 6.8)) return;
+  const p = c.querySelector('p');
+  if (p) cortarAte(p, p.textContent, () => cabeNoBloco(b));
+}
+
+function encaixarNC(b, ncs) {
+  const c = b.querySelector('.conteudo');
+  const cabe = () => cabeNoBloco(b);
+  c.innerHTML = htmlNC(ncs, { modo: 'linhas' });
+  if (reduzirAte(c, cabe, 8.2, 7.2)) return;
+  c.innerHTML = htmlNC(ncs, { modo: 'fluxo' });
+  if (reduzirAte(c, cabe, 7.8, 6.6)) return;
+  // Mostra o máximo de registros inteiros e completa o espaço com o seguinte cortado.
+  let k = ncs.length - 1;
+  for (; k > 0; k--) {
+    c.innerHTML = htmlNC(ncs, { modo: 'fluxo', k });
+    if (cabe()) break;
+  }
+  let lo = 0;
+  let hi = ncs[k]?.obs.length || 0;
+  while (lo < hi) {
+    const meio = Math.ceil((lo + hi) / 2);
+    c.innerHTML = htmlNC(ncs, { modo: 'fluxo', k, parcial: meio });
+    if (cabe()) lo = meio;
+    else hi = meio - 1;
+  }
+  c.innerHTML = htmlNC(ncs, { modo: 'fluxo', k, parcial: lo >= 12 ? lo : 0 });
+}
+
+/** Bloco de serviço: ocupa o espaço que sobrar na folha. */
+function encaixarServico(d) {
+  const b = pagina.querySelector('.bloco[data-tipo="servico"]');
+  if (!b) return;
+  if (d.branco) {
+    const n = Math.max(1, Math.floor(b.clientHeight / PX_POR_MM / H_LINHA_MM + 0.005));
+    b.innerHTML = linhasEscrita(n);
+    return;
+  }
+  const c = b.querySelector('.conteudo');
+  const cabe = () => cabeNoBloco(b);
+  const desenharServico = (opcoes) => (c.innerHTML = htmlServico(d, opcoes));
+
+  // 1) Lista em colunas, reduzindo a fonte.
+  if (reduzirAte(c, cabe, 8.4, 7.2)) return;
+  // 2) Itens em texto corrido.
+  desenharServico({ modo: 'fluxo' });
+  if (reduzirAte(c, cabe, 7.8, 6.8)) return;
+  // 3) Limita o texto a ~3 linhas, depois reduz a quantidade de itens mostrados.
+  const t = texto(d.o.servico_executado);
+  const p = () => c.querySelector('.txt-servico');
+  let textoMax = Infinity;
+  if (p()) {
+    const alturaLinha = ptAtual(c) * 1.3 * (25.4 / 72) * PX_POR_MM;
+    cortarAte(p(), t, () => p().offsetHeight <= alturaLinha * 3 + 1);
+    textoMax = p().textContent.endsWith('…') ? p().textContent.length - 1 : Infinity;
+    if (cabe()) return;
+  }
+  const maior = Math.max(d.servicos.length, d.pecas.length);
+  for (let limite = maior - 1; limite >= 1; limite--) {
+    desenharServico({ modo: 'fluxo', limite, textoMax });
+    if (cabe()) return;
+  }
+  // 4) Último recurso: corta o texto até caber.
+  desenharServico({ modo: 'fluxo', limite: 1, textoMax });
+  if (p() && !cabe()) cortarAte(p(), p().textContent, cabe);
+}
+
+// ---------------------------------------------------------------------------
 // Desenho + ajuste automático para caber em uma folha
 // ---------------------------------------------------------------------------
 function desenhar(d, p) {
   pagina.style.setProperty('--h-ck', `${p.hCk.toFixed(2)}mm`);
-  pagina.style.setProperty('--cx', `${Math.min(3.8, Math.max(3, p.hCk - 1.4)).toFixed(2)}mm`);
-  pagina.style.setProperty('--min-el', `${p.linhas.servico * H_LINHA_MM}mm`);
+  pagina.style.setProperty('--cx', `${Math.min(3.8, Math.max(3, p.hCk - 1.6)).toFixed(2)}mm`);
+  pagina.style.setProperty('--min-el', `${p.linhas.servico * H_LINHA_MM + 2 * BORDA_MM + 0.1}mm`);
   pagina.classList.toggle('compacta', p.compacta);
   pagina.innerHTML = [cabecalho(d), linhaEntrada(d), secao1(d, p), secao2(d, p), secao3(d, p), rodape(d)].join('');
   encaixarLinhasSimples();
   if (!d.branco) {
     for (const b of pagina.querySelectorAll('.bloco[data-tipo="texto"]')) encaixarTexto(b);
     const nc = pagina.querySelector('.bloco[data-tipo="nc"]');
-    if (nc && d.ncs.length) encaixarNC(nc, d);
+    if (nc && d.ncs.length) encaixarNC(nc, d.ncs);
   }
 }
 
@@ -418,93 +560,10 @@ function medirExcesso() {
   return altura / PX_POR_MM - ALTURA_UTIL_MM;
 }
 
-/** Textos de uma linha: reduz a fonte até caber (o restante vira "…"). */
-function encaixarLinhasSimples() {
-  const alvos = pagina.querySelectorAll('.v .t, .outros .linha, .ck td.item, .opcoes');
-  for (const el of alvos) {
-    if (el.scrollWidth <= el.clientWidth + 0.5) continue;
-    const base = parseFloat(getComputedStyle(el).fontSize) * 0.75; // px → pt
-    let pt = base;
-    const minimo = Math.min(base, 6.4);
-    while (el.scrollWidth > el.clientWidth + 0.5 && pt > minimo) {
-      pt = Math.max(minimo, pt - 0.2);
-      el.style.fontSize = `${pt}pt`;
-    }
-  }
-}
-
-const cabeNoBloco = (b) => {
-  const c = b.querySelector('.conteudo');
-  return !c || c.offsetHeight <= b.clientHeight + 0.5;
-};
-
-/** Reduz a fonte de um bloco de texto; se ainda não couber, corta o texto com "…". */
-function reduzirFonte(b, max = 8.4, min = 6.8) {
-  const c = b.querySelector('.conteudo');
-  if (!c) return true;
-  let pt = max;
-  c.style.fontSize = `${pt}pt`;
-  while (!cabeNoBloco(b) && pt > min) {
-    pt = Math.max(min, pt - 0.2);
-    c.style.fontSize = `${pt}pt`;
-  }
-  return cabeNoBloco(b);
-}
-
-function truncarParagrafo(b, p) {
-  const original = p.dataset.original ?? p.textContent;
-  p.dataset.original = original;
-  let lo = 0;
-  let hi = original.length;
-  while (lo < hi) {
-    const meio = Math.ceil((lo + hi) / 2);
-    p.textContent = cortar(original, meio);
-    if (cabeNoBloco(b)) lo = meio;
-    else hi = meio - 1;
-  }
-  p.textContent = cortar(original, lo);
-}
-
-function encaixarTexto(b) {
-  if (reduzirFonte(b)) return;
-  const p = b.querySelector('.conteudo p');
-  if (p) truncarParagrafo(b, p);
-}
-
-function encaixarNC(b, d) {
-  if (reduzirFonte(b, 8, 6.6)) return;
-  const c = b.querySelector('.conteudo');
-  for (let limite = d.ncs.length - 1; limite >= 1; limite--) {
-    c.innerHTML = listaNC(d.ncs, limite);
-    if (cabeNoBloco(b)) return;
-  }
-}
-
-/** Bloco de serviço (ocupa o espaço que sobrar na folha). */
-function finalizarServico(d) {
-  const b = pagina.querySelector('.bloco[data-tipo="servico"]');
-  if (!b) return;
-  if (d.branco) {
-    const n = Math.max(1, Math.floor(b.clientHeight / PX_POR_MM / H_LINHA_MM + 0.02));
-    b.innerHTML = linhasEscrita(n);
-    return;
-  }
-  if (reduzirFonte(b, 8.4, 7)) return;
-  const c = b.querySelector('.conteudo');
-  const maior = Math.max(d.servicos.length, d.pecas.length);
-  for (let limite = maior - 1; limite >= 1; limite--) {
-    c.innerHTML = conteudoServico(d, limite);
-    if (cabeNoBloco(b)) return;
-  }
-  reduzirFonte(b, 7, 6.6);
-  const p = c.querySelector('p');
-  if (p && !cabeNoBloco(b)) truncarParagrafo(b, p);
-}
-
 function ajustar(d) {
   const n = Math.max(1, d.itens.length);
   const p = {
-    hCk: n <= 12 ? Math.min(7, 74.4 / n) : 6.2,
+    hCk: n <= 12 ? Math.min(7, 75 / n) : 6.25,
     compacta: false,
     linhas: { defeito: 2, nc: 2, servico: 3, obs: 2 },
   };
@@ -518,18 +577,30 @@ function ajustar(d) {
     p.linhas[campo]--;
     return true;
   };
-  // Ordem de compactação: do menos ao mais perceptível.
-  const passos = [
-    (e) => reduzirCk(5.6, e),
-    () => !p.compacta && (p.compacta = true),
-    (e) => reduzirCk(5, e),
-    () => menosLinhas('servico', 2),
-    () => menosLinhas('nc', 1),
-    (e) => reduzirCk(4.4, e),
-    () => menosLinhas('obs', 1),
-    () => menosLinhas('defeito', 1),
-    () => menosLinhas('servico', 1),
-  ];
+  // Ordem de compactação: do menos ao mais perceptível. Em branco, preserva as linhas de
+  // escrita; preenchida, preserva o espaço dos textos (as marcações já vêm impressas).
+  // Defeito e observações ficam com 2 linhas no mínimo: os rótulos ocupam essa altura.
+  const passos = d.branco
+    ? [
+        (e) => reduzirCk(5.6, e),
+        () => !p.compacta && (p.compacta = true),
+        (e) => reduzirCk(5, e),
+        () => menosLinhas('servico', 2),
+        () => menosLinhas('nc', 1),
+        (e) => reduzirCk(4.4, e),
+        () => menosLinhas('servico', 1),
+        (e) => reduzirCk(3.8, e),
+      ]
+    : [
+        (e) => reduzirCk(5.6, e),
+        () => !p.compacta && (p.compacta = true),
+        (e) => reduzirCk(4.6, e),
+        () => menosLinhas('servico', 2),
+        (e) => reduzirCk(4.2, e),
+        () => menosLinhas('nc', 1),
+        () => menosLinhas('servico', 1),
+        (e) => reduzirCk(3.8, e),
+      ];
 
   let passo = 0;
   for (let tentativa = 0; tentativa < 80; tentativa++) {
@@ -538,9 +609,9 @@ function ajustar(d) {
     if (excesso <= 0.05) break;
     let mudou = false;
     while (passo < passos.length && !(mudou = passos[passo](excesso))) passo++;
-    if (!mudou) break; // nada mais a compactar: o que sobrar fica oculto, mas a folha continua única
+    if (!mudou) break; // nada mais a compactar: o excedente fica oculto, mas a folha continua única
   }
-  finalizarServico(d);
+  encaixarServico(d);
   return p;
 }
 
@@ -557,6 +628,7 @@ function mostrarErro(titulo, detalhe = '') {
   pagina.innerHTML = `<div class="aviso"><strong>${esc(titulo)}</strong>${esc(detalhe)}</div>`;
   pagina.removeAttribute('aria-busy');
   barraTitulo.textContent = titulo;
+  document.body.dataset.pronto = 'erro';
 }
 
 async function esperarFontes() {
@@ -580,30 +652,31 @@ async function iniciar() {
     window.close();
     // Se a janela não puder ser fechada (não foi aberta pelo sistema), volta para a aplicação.
     setTimeout(() => {
-      location.href = !emBranco ? `/#/ordens/${ordemId}` : '/';
+      location.href = emBranco ? '/' : `/#/ordens/${ordemId}`;
     }, 250);
   });
   addEventListener('resize', ajustarZoom);
+  ajustarZoom();
 
   let cfg;
   let ordem = null;
   try {
     [cfg, ordem] = await Promise.all([api.get('/config'), emBranco ? null : api.get(`/ordens/${ordemId}`)]);
   } catch (e) {
-    const titulo = e.status === 404 ? 'Ordem de serviço não encontrada' : 'Não foi possível montar o checklist';
-    mostrarErro(titulo, e.status === 404 ? `Verifique o número da OS (id ${ordemId}).` : e.message);
-    ajustarZoom();
+    if (e.status === 404) mostrarErro('Ordem de serviço não encontrada', 'Ela pode ter sido excluída. Feche esta janela e abra a OS novamente.');
+    else mostrarErro('Não foi possível montar o checklist', e.message);
     return;
   }
 
   const d = montarDados(cfg, ordem);
-  const titulo = d.branco
+  const cliente = texto(ordem?.cliente_nome);
+  barraTitulo.textContent = d.branco
     ? 'Checklist técnico em branco'
-    : `Checklist técnico · OS nº ${ordem.numero}${texto(ordem.cliente_nome) ? ` — ${texto(ordem.cliente_nome)}` : ''}`;
-  barraTitulo.textContent = titulo;
+    : `Checklist técnico · OS nº ${ordem.numero}${cliente ? ` — ${cliente}` : ''}`;
+  // O título vira o nome sugerido do arquivo ao salvar em PDF.
   document.title = d.branco
     ? 'Checklist técnico em branco · BALANÇAS.COM'
-    : `Checklist OS ${ordem.numero}${texto(ordem.cliente_nome) ? ` - ${texto(ordem.cliente_nome)}` : ''}`;
+    : `Checklist OS ${ordem.numero}${cliente ? ` - ${cliente}` : ''}`;
 
   await esperarFontes();
   ajustar(d);
@@ -612,7 +685,6 @@ async function iniciar() {
   pagina.removeAttribute('aria-busy');
   document.body.dataset.pronto = '1';
   btnImprimir.disabled = false;
-  ajustarZoom();
 
   if (autoImprimir) requestAnimationFrame(() => setTimeout(() => window.print(), 150));
 }

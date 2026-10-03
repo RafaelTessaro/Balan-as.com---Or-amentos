@@ -46,16 +46,16 @@
 
   /* Dimensões ajustadas pelo checklist.js para caber em uma folha */
   --altura-util: 276mm;
-  --h-cab: 17mm;
+  --h-cab: 16mm;
   --h-campo: 7mm; /* linha de preenchimento (≥ 7 mm para escrita à mão) */
   --h-linha: 7mm;
   --h-titulo: 6mm;
   --h-ck: 6.2mm; /* linha do checklist funcional */
   --cx: 3.8mm; /* quadrado de marcação */
   --cx-o: 3.2mm; /* quadrado das opções (acessórios, tensão, situação) */
-  --gap: 2.2mm;
-  --rotulo: 31mm;
-  --valor-dir: 52mm;
+  --gap: 2mm;
+  --rotulo: 32mm;
+  --valor-dir: 50mm;
   --min-el: 21mm;
 
   -webkit-print-color-adjust: exact;
@@ -273,8 +273,8 @@ body {
   min-width: 0;
 }
 .cab-marca img {
-  width: 12.5mm;
-  height: 12.5mm;
+  width: 12mm;
+  height: 12mm;
   flex: none;
 }
 .cab-empresa {
@@ -391,7 +391,7 @@ body {
   flex-direction: column;
   justify-content: center;
   min-height: var(--h-campo);
-  padding: 0.5mm 1.8mm;
+  padding: 0.5mm 1.6mm;
   background: var(--verde-claro);
   font-size: 6.2pt;
   font-weight: 700;
@@ -402,8 +402,8 @@ body {
 }
 .r small {
   display: block;
-  margin-top: 0.3mm;
-  font-size: 5.5pt;
+  margin-top: 0.2mm;
+  font-size: 5.3pt;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
@@ -425,7 +425,7 @@ body {
   display: flex;
   align-items: center;
   gap: 1.6mm;
-  height: var(--h-campo);
+  min-height: var(--h-campo);
   padding: 0 1.8mm;
   font-size: 8.6pt;
   font-weight: 500;
@@ -441,6 +441,22 @@ body {
 }
 .v .t.forte {
   font-weight: 650;
+}
+/* Texto longo: até duas linhas dentro da mesma altura */
+.v .t.duas,
+.outros .linha.duas {
+  white-space: normal;
+  line-height: 1.12;
+  max-height: calc(2.24em + 0.3mm);
+  overflow-wrap: anywhere;
+}
+.outros .linha.duas {
+  max-height: calc(2.24em + 0.8mm);
+}
+.v .t,
+.outros .linha,
+.bloco .conteudo {
+  font-feature-settings: 'cv11', 'ss01', 'calt' 0;
 }
 .v .extra {
   flex: none;
@@ -482,10 +498,10 @@ body {
   padding: 0;
 }
 .bloco .conteudo {
-  padding: 1.1mm 1.8mm 0.8mm;
+  padding: 1mm 1.8mm 0.6mm;
   font-size: 8.4pt;
   font-weight: 500;
-  line-height: 1.32;
+  line-height: 1.28;
   color: var(--tinta);
   overflow-wrap: anywhere;
 }
@@ -590,13 +606,16 @@ body {
 .opcoes {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  column-gap: 3.4mm;
+  flex-wrap: nowrap;
+  column-gap: 1.2em;
   row-gap: 0.4mm;
   height: auto;
   min-height: var(--h-campo);
   padding: 0.6mm 1.8mm;
   font-size: 7.8pt;
+}
+.opcoes.quebra {
+  flex-wrap: wrap;
 }
 .opcao {
   display: inline-flex;
@@ -632,12 +651,6 @@ body {
   font-weight: 600;
   min-height: 3.8mm;
 }
-.situacao-atual {
-  margin-left: auto;
-  font-size: 6.4pt;
-  color: var(--suave);
-  white-space: nowrap;
-}
 
 /* --------------------------------------------------------------------------
    Checklist funcional
@@ -667,7 +680,7 @@ body {
   color: var(--texto);
 }
 .ck .h1 th {
-  height: 4.6mm;
+  height: 4.3mm;
 }
 .ck .h1 th.grupo {
   background: var(--cinza-marca);
@@ -683,7 +696,7 @@ body {
   padding-left: 2mm;
 }
 .ck .h2 th {
-  height: 4mm;
+  height: 3.7mm;
   background: var(--verde-claro);
   font-size: 6.4pt;
 }
@@ -758,19 +771,20 @@ body {
   padding: 0;
   list-style: none;
 }
-.lista-nc.colunas {
-  columns: 2;
-  column-gap: 5mm;
-}
-.lista-nc li {
-  break-inside: avoid;
-}
-.lista-nc li b {
+.lista-nc b,
+.nc-fluxo b {
   font-weight: 650;
 }
-.lista-nc .mais {
+.nc-fluxo .sep,
+.grupo-fluxo .sep {
+  color: var(--suave);
+}
+.lista-nc .mais,
+.nc-fluxo .mais,
+.grupo-fluxo .mais {
   color: var(--suave);
   font-style: italic;
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------
@@ -835,6 +849,23 @@ body {
   color: var(--suave);
   font-style: italic;
 }
+.itens-os.fluxo {
+  display: block;
+}
+.grupo-fluxo {
+  margin: 0;
+}
+.grupo-fluxo + .grupo-fluxo {
+  margin-top: 0.4mm;
+}
+.grupo-fluxo .grupo-t {
+  font-size: 0.8em;
+  margin-right: 0.6mm;
+}
+.grupo-fluxo .it b {
+  font-weight: 700;
+  color: var(--texto);
+}
 
 /* Assinaturas */
 .assinaturas {
@@ -844,8 +875,9 @@ body {
   padding: 0 6mm;
 }
 .ass {
-  padding-top: 8.5mm;
+  padding-top: 8mm;
   text-align: center;
+  min-width: 0;
 }
 .ass .linha-ass {
   border-top: 0.25mm solid var(--tinta);
@@ -855,13 +887,13 @@ body {
   font-size: 6.4pt;
   font-weight: 600;
   color: var(--texto);
-}
-.ass .nome {
-  font-size: 6.2pt;
-  color: var(--suave);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.ass .nome {
+  font-weight: 500;
+  color: var(--suave);
 }
 
 /* Rodapé */
@@ -869,8 +901,8 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 4mm;
-  margin-top: 1.6mm;
-  padding-top: 1mm;
+  margin-top: 1.4mm;
+  padding-top: 0.9mm;
   border-top: 0.2mm solid var(--borda-fraca);
   font-size: 6pt;
   color: var(--suave);
@@ -885,10 +917,10 @@ body {
 .pagina.compacta {
   --gap: 1.4mm;
   --h-titulo: 5.2mm;
-  --h-cab: 15.5mm;
+  --h-cab: 15mm;
 }
 .pagina.compacta .ass {
-  padding-top: 7.5mm;
+  padding-top: 7mm;
 }
 
 /* --------------------------------------------------------------------------

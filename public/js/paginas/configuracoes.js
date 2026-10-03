@@ -685,12 +685,15 @@ export async function montar(el, { query = {} } = {}) {
     const src = (n) => `/timbrado/${n}.png?v=${versaoImagens}`;
     return `
       <figure class="folha-a4${usar ? '' : ' desligada'}" aria-label="Pré-visualização de uma página do orçamento">
-        <img class="folha-cabecalho" src="${src('cabecalho')}" alt="Cabeçalho atual" />
-        <div class="folha-conteudo" aria-hidden="true">
-          <i style="width:46%"></i><i style="width:78%"></i><i style="width:64%"></i>
-          <b></b><i style="width:82%"></i><i style="width:70%"></i><i style="width:76%"></i><i style="width:40%"></i>
+        <div class="folha">
+          <img class="folha-cabecalho" src="${src('cabecalho')}" alt="Cabeçalho atual" />
+          <div class="folha-conteudo" aria-hidden="true">
+            <i style="width:46%"></i><i style="width:78%"></i><i style="width:64%"></i>
+            <b></b><i style="width:82%"></i><i style="width:70%"></i><i style="width:76%"></i><i style="width:40%"></i>
+            <b class="baixo"></b><i style="width:58%"></i><i style="width:72%"></i>
+          </div>
+          <img class="folha-rodape" src="${src('rodape')}" alt="Rodapé atual" />
         </div>
-        <img class="folha-rodape" src="${src('rodape')}" alt="Rodapé atual" />
         <figcaption>${usar ? 'Folha A4 com o papel timbrado' : 'Papel timbrado desligado'}</figcaption>
       </figure>
       <div class="timbrado-itens">

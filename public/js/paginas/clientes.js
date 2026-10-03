@@ -82,7 +82,7 @@ export async function montar(el, { query = {} } = {}) {
         <div class="barra-ferramentas">
           <label class="busca">
             <span data-icone="search"></span>
-            <input class="entrada" type="search" name="q" placeholder="Buscar por nome, CPF/CNPJ, telefone, e-mail ou cidade"
+            <input class="entrada" type="search" name="q" placeholder="Nome, CPF/CNPJ, telefone ou e-mail"
               aria-label="Buscar clientes" autocomplete="off" />
           </label>
           <div class="resumo-lista" aria-live="polite"></div>
@@ -130,11 +130,13 @@ export async function montar(el, { query = {} } = {}) {
 
   function desenharResumo() {
     if (termo) {
-      areaResumo.innerHTML = `<b>${lista.length}</b> ${lista.length === 1 ? 'encontrado' : 'encontrados'}${
+      areaResumo.innerHTML = `<span><b>${lista.length}</b> ${lista.length === 1 ? 'encontrado' : 'encontrados'}${
         totalGeral != null ? ` <span class="texto-fraco">de ${totalGeral}</span>` : ''
-      }`;
+      }</span>`;
     } else {
-      areaResumo.innerHTML = `<b>${lista.length}</b> ${lista.length === 1 ? 'cliente' : 'clientes'}`;
+      areaResumo.innerHTML = lista.length
+        ? `<span><b>${lista.length}</b> ${lista.length === 1 ? 'cliente' : 'clientes'}</span>`
+        : '';
     }
   }
 
@@ -173,6 +175,7 @@ export async function montar(el, { query = {} } = {}) {
             <div class="min-0">
               <span class="destaque">${realcar(c.nome, termo)}</span>
               ${doc}
+              ${c.cidade ? `<span class="secundario cidade-compacta">${icone('map-pin', 'i-s')}${realcar(c.cidade, termo)}</span>` : ''}
             </div>
           </div>
         </td>
@@ -196,6 +199,8 @@ export async function montar(el, { query = {} } = {}) {
 
   function desenhar() {
     desenharResumo();
+    // Sem nenhum cliente cadastrado: só o convite para cadastrar.
+    $('.barra-ferramentas', raiz).classList.toggle('oculto', !lista.length && !termo);
     if (!lista.length) {
       areaResultado.innerHTML = termo
         ? vazioHTML({
@@ -223,7 +228,7 @@ export async function montar(el, { query = {} } = {}) {
             <tr>
               <th>Cliente</th>
               <th>Contato</th>
-              <th>Cidade</th>
+              <th class="col-cidade">Cidade</th>
               <th class="acoes-linha"><span class="sr">Ações</span></th>
             </tr>
           </thead>

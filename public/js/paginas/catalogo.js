@@ -18,7 +18,6 @@ import {
   numeroBR,
   lerNumero,
   dataBR,
-  tempoRelativo,
   toast,
   erro,
   abrirModal,
@@ -40,7 +39,7 @@ const TIPOS = {
     icone: 'wrench',
     novo: 'Novo serviço',
     o: 'o',
-    busca: 'Buscar serviço por nome ou descrição',
+    busca: 'Buscar por nome ou descrição',
     coluna: 'Serviço',
     colunaValor: 'Valor',
     exemplo: 'Ex.: Limpeza, Regulagem, Ajuste de Peso e Lacração',
@@ -53,7 +52,7 @@ const TIPOS = {
     icone: 'package',
     novo: 'Nova peça',
     o: 'a',
-    busca: 'Buscar peça por nome ou código',
+    busca: 'Buscar por nome ou código',
     coluna: 'Peça',
     colunaValor: 'Valor unitário',
     exemplo: 'Ex.: Cabeçote Térmico Toledo',
@@ -75,6 +74,18 @@ const normalizar = (s) =>
     .toLowerCase();
 
 const diasDesde = (iso) => (iso ? Math.floor((Date.now() - new Date(iso).getTime()) / 86400000) : 0);
+
+/** "hoje", "ontem", "há 12 dias", "há 3 meses", "há 1 ano". */
+function idade(iso) {
+  const d = diasDesde(iso);
+  if (d <= 0) return 'hoje';
+  if (d === 1) return 'ontem';
+  if (d < 45) return `há ${d} dias`;
+  const meses = Math.round(d / 30.44);
+  if (meses < 12) return `há ${meses} meses`;
+  const anos = Math.floor(d / 365);
+  return `há ${anos} ${anos === 1 ? 'ano' : 'anos'}`;
+}
 
 function lerPreferencia(chave, padrao) {
   try {
@@ -208,7 +219,7 @@ export async function montar(el, { params = {} } = {}) {
     return `
       <td class="col-data">
         <span class="data-atualizacao${velho ? ' velha' : ''}" title="${esc(
-          `Última alteração: ${dataBR(x.atualizado_em)} (${tempoRelativo(x.atualizado_em)})`
+          `Última alteração: ${dataBR(x.atualizado_em)} (${idade(x.atualizado_em)})`
         )}">${esc(dataBR(x.atualizado_em))}</span>
         ${
           velho
@@ -216,7 +227,7 @@ export async function montar(el, { params = {} } = {}) {
                 'clock',
                 'i-s'
               )}Preço desatualizado?</span>`
-            : `<span class="secundario">${esc(tempoRelativo(x.atualizado_em))}</span>`
+            : `<span class="secundario">${esc(idade(x.atualizado_em))}</span>`
         }
       </td>`;
   }
@@ -443,7 +454,7 @@ export async function montar(el, { params = {} } = {}) {
           x.id && !duplicando
             ? `<p class="form-rodape-info">${icone('history', 'i-s')}Cadastrad${T.o} em ${esc(dataBR(x.criado_em))} · última alteração em ${esc(
                 dataBR(x.atualizado_em)
-              )} (${esc(tempoRelativo(x.atualizado_em))})</p>`
+              )} (${esc(idade(x.atualizado_em))})</p>`
             : ''
         }
       </div>`;

@@ -694,18 +694,19 @@ export async function montar(el, { query = {} } = {}) {
           <button type="button" class="btn btn-p" data-copiar="${esc(valor)}">${icone('copy')}<span>Copiar</span></button>
         </div>`;
       const local = `http://localhost:${ident.porta}`;
-      const naRede = ident.enderecos.length
-        ? ident.enderecos
-            .map((e) =>
+      const redes = ident.redes || ident.enderecos.map((endereco) => ({ endereco, adaptador: '' }));
+      const naRede = redes.length
+        ? redes
+            .map((r) =>
               linha({
                 ic: 'tablet-smartphone',
-                titulo: 'Em outros computadores e tablets',
+                titulo: `Em outros computadores e tablets${r.adaptador ? ` (${r.adaptador})` : ''}`,
                 texto: 'Digite este endereço no navegador de qualquer aparelho ligado à <b>mesma rede</b> (cabo ou Wi-Fi) deste computador.',
-                valor: e,
+                valor: r.endereco,
               })
             )
             .join('')
-        : `<div class="aviso">${icone('wifi')}<div>Este computador não está conectado a uma rede. Para usar em tablets, ligue-o ao Wi-Fi ou ao cabo da oficina e abra esta tela de novo.</div></div>`;
+        : `<div class="aviso">${icone('wifi')}<div>Este computador não está conectado a uma rede. Para usar em tablets, ligue-o ao Wi-Fi ou ao cabo da oficina e clique de novo em <b>Rede e dados</b>.</div></div>`;
       return (
         cartao({
           icone: 'network',
@@ -1526,6 +1527,16 @@ export async function montar(el, { query = {} } = {}) {
     let b;
 
     if ((b = alvo('.config-nav-item'))) {
+      // Rede e dados: lê os endereços de novo (o Wi-Fi pode ter sido ligado depois).
+      if (b.dataset.secao === 'rede') {
+        api
+          .get('/identidade')
+          .then((novo) => {
+            ident = novo;
+            if (ativo && secaoAtual === 'rede') desenharSecao();
+          })
+          .catch(() => {});
+      }
       if (b.dataset.secao !== secaoAtual) {
         secaoAtual = b.dataset.secao;
         desenharSecao({ rolar: true });
@@ -1670,23 +1681,33 @@ export async function montar(el, { query = {} } = {}) {
     if ((b = alvo('[data-copiar]'))) return copiar(b.dataset.copiar, b.closest('.linha-endereco'));
   });
 
-  // Copia o endereço. Sem acesso à área de transferência (página aberta pelo
-  // IP da rede, sem HTTPS), seleciona o texto para o usuário copiar com Ctrl+C.
+  // Copia o endereço. Página aberta pelo IP da rede (sem HTTPS) não tem a API
+  // da área de transferência: seleciona o texto e usa o comando de copiar antigo.
   async function copiar(texto, linha) {
     try {
       await navigator.clipboard.writeText(texto);
       toast('Endereço copiado.', 'sucesso');
+      return;
     } catch {
-      const alvoTexto = linha && $('[data-valor]', linha);
-      if (alvoTexto) {
-        const r = document.createRange();
-        r.selectNodeContents(alvoTexto);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(r);
-      }
-      toast('Endereço selecionado: pressione Ctrl+C para copiar.', 'info');
+      /* tenta do jeito antigo */
     }
+    const alvoTexto = linha && $('[data-valor]', linha);
+    if (alvoTexto) {
+      const r = document.createRange();
+      r.selectNodeContents(alvoTexto);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+      try {
+        if (document.execCommand('copy')) {
+          toast('Endereço copiado.', 'sucesso');
+          return;
+        }
+      } catch {
+        /* sem cópia automática */
+      }
+    }
+    toast('Endereço selecionado. Copie com Ctrl+C ou toque e segure › Copiar.', 'info');
   }
 
   // Ctrl+S / Cmd+S salva.

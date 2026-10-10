@@ -401,6 +401,7 @@
   z-index: 12;
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap; /* em telas médias quebra em 2 linhas: nenhuma aba some da vista */
   gap: 4px;
   padding: 6px;
   overflow-x: auto;
@@ -1381,6 +1382,7 @@ body:has(.barra-salvar:not(.oculto)) .toasts {
     top: 0;
     z-index: 12;
     flex-direction: row;
+    flex-wrap: nowrap; /* no celular/tablet as abas rolam na horizontal */
     overflow-x: auto;
     padding: 6px;
     scrollbar-width: none;
@@ -1724,5 +1726,14 @@ body:has(.barra-salvar:not(.oculto)) .toasts {
 @media (max-width: 768px) {
   .config-nav {
     top: var(--altura-topo);
+  }
+}
+
+/* Com mouse, as abas das configurações quebram linha em vez de rolar
+   (a barra de rolagem fica escondida e o mouse não arrasta para o lado). */
+@media (max-width: 1100px) and (pointer: fine) {
+  .config-nav {
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 }

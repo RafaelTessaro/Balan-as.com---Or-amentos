@@ -59,41 +59,54 @@ function backupAutomatico() {
 }
 
 function abrir(url) {
-  if (process.env.NAO_ABRIR_NAVEGADOR) return;
+  if (process.env.NAO_ABRIR_NAVEGADOR) return Promise.resolve();
   const modo = process.env.JANELA || instancia.lerPreferencias(DATA_DIR).janela;
-  abrirJanela(url, { modo }).catch(() => {});
+  return abrirJanela(url, { modo }).catch(() => {});
 }
 
-// Encerra depois de abrir a janela (o navegador é aberto em segundo plano).
+// Encerra com uma pequena folga para o navegador receber o pedido da janela.
 function sair(codigo) {
   setTimeout(() => process.exit(codigo), 1500);
 }
 
+// Ctrl+C ou a janela preta fechada: encerra liberando o registro do processo.
 process.on('SIGINT', () => process.exit(0));
+process.on('SIGHUP', () => process.exit(0));
+process.on('SIGTERM', () => process.exit(0));
+process.on('exit', () => instancia.liberarProcesso(DATA_DIR));
 
 async function principal() {
   const servidor = http.createServer(app);
-  const r = await instancia.iniciarServidor(servidor, {
-    host: HOST,
-    pastaDados: DATA_DIR,
-    portaAmbiente: Number(process.env.PORT) || 0,
-  });
+  const portaAmbiente = process.env.PORT ? Number(process.env.PORT) : 0;
+  if (process.env.PORT && !(Number.isInteger(portaAmbiente) && portaAmbiente >= 1 && portaAmbiente <= 65535)) {
+    console.log(`\n  A variável PORT="${process.env.PORT}" não é uma porta válida (use de 1 a 65535).\n`);
+    return sair(1);
+  }
+  const r = await instancia.iniciarServidor(servidor, { host: HOST, pastaDados: DATA_DIR, portaAmbiente });
   const local = `http://localhost:${r.porta}`;
 
   if (r.situacao === 'ja-aberto') {
     console.log(`\n  O sistema já está aberto em ${local}. Abrindo a janela...\n`);
-    abrir(local);
+    await abrir(local);
     return sair(0);
+  }
+  if (r.situacao === 'sem-resposta') {
+    console.log('');
+    console.log(`  O sistema já está aberto na porta ${r.porta}, mas não está respondendo.`);
+    console.log('  Abra a janela preta dele (na barra de tarefas): se houver texto selecionado,');
+    console.log('  aperte Esc. Se continuar sem responder, feche aquela janela e abra o sistema de novo.');
+    console.log('');
+    return sair(1);
   }
   if (r.situacao === 'outra-copia') {
     console.log('');
-    console.log(`  ATENÇÃO: outra cópia deste sistema já está aberta na porta ${r.porta},`);
-    console.log('  usando os dados de outra pasta:');
+    console.log(`  ATENÇÃO: o sistema já está aberto na porta ${r.porta} a partir de OUTRA pasta,`);
+    console.log('  com os dados em:');
     console.log(`     ${r.pasta}`);
     console.log('');
     console.log('  Para não misturar dois bancos de dados, esta cópia não foi aberta.');
-    console.log('  Feche a janela preta da outra cópia e abra esta de novo,');
-    console.log('  ou use sempre a mesma pasta do sistema.');
+    console.log('  Use sempre o atalho "Orcamentos BALANCAS.COM". Para atualizar o sistema,');
+    console.log('  feche a janela preta e extraia a versão nova por cima da pasta antiga.');
     console.log('');
     return sair(1);
   }
@@ -116,9 +129,10 @@ async function principal() {
   console.log(`  Neste computador:  ${local}`);
   for (const ip of instancia.enderecosRede()) console.log(`  Na rede local:     http://${ip}:${r.porta}`);
   console.log(`  Dados salvos em:   ${DATA_DIR}`);
+  for (const a of r.avisos) console.log(`\n  ATENÇÃO: ${a}`);
   if (r.mudou) {
     console.log('');
-    console.log(`  A porta ${r.ocupada} está sendo usada por outro programa.`);
+    console.log(`  A porta ${r.ocupada} está ocupada por outro programa (ou reservada pelo Windows).`);
     console.log(`  Este sistema passou a usar a porta ${r.porta} (fica gravada para as próximas vezes).`);
   }
   console.log('');

@@ -70,7 +70,8 @@ Tablets na mesma rede acessam pelo endereço mostrado em Configurações > Rede 
 
 Este sistema usa a porta 4980 e a pasta "dados" só dele: não conflita com o
 BC Fichas Control (porta 3000) nem com outros programas. Use uma pasta
-separada para cada sistema.
+separada para cada sistema. Até a versão anterior o endereço terminava em
+:3000; tablets e favoritos com o endereço antigo precisam do novo.
 
 Os dados ficam na pasta "dados" (criada automaticamente). Faça backup dela.
 Internet só é necessária para enviar orçamentos por e-mail ou WhatsApp.
@@ -151,7 +152,8 @@ Tablets na mesma rede acessam pelo endereço mostrado em Configurações > Rede 
 
 Este sistema usa a porta 4980 e a pasta "dados" só dele: não conflita com o
 BC Fichas Control (porta 3000) nem com outros programas. Use uma pasta
-separada para cada sistema.
+separada para cada sistema. Até a versão anterior o endereço terminava em
+:3000; tablets e favoritos com o endereço antigo precisam do novo.
 
 Os dados ficam na pasta "dados" (criada automaticamente). Faça backup dela.
 Para atualizar o sistema, feche a janela preta e extraia a versão nova por

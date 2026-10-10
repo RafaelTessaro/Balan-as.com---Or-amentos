@@ -48,6 +48,7 @@ jobs:
 
           Na primeira vez é criado o atalho **Orcamentos BALANCAS.COM** na Área de Trabalho e no menu Iniciar.
           O sistema usa a porta 4980 e a pasta `dados` só dele, sem conflito com o BC Fichas Control (porta 3000).
+          Até a versão anterior o endereço terminava em `:3000`: tablets e favoritos com o endereço antigo precisam do novo (veja **Configurações › Rede e dados**).
 
           Para atualizar, feche a janela preta e extraia a versão nova por cima da pasta antiga: a pasta `dados` é mantida.
           NOTAS

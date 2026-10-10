@@ -52,6 +52,8 @@ Na primeira vez, o atalho **"Orcamentos BALANCAS.COM"** é criado na Área de Tr
 - se o sistema estiver fechado, ele o inicia com a janela preta já minimizada e abre a janela do sistema;
 - se já estiver aberto, só abre a janela de novo.
 
+O atalho aponta para a pasta do sistema que foi aberta por último. Uma cópia nova, ainda sem dados (por exemplo, uma atualização extraída na pasta errada), não toma o atalho de uma pasta que já tem os dados.
+
 A janela própria usa o navegador padrão do computador quando ele é o Chrome, o Edge ou o Brave, para o WhatsApp Web abrir na conta de sempre. Com outro navegador padrão, ela usa o Edge, que já vem no Windows.
 
 **Versão em 2 partes:**
@@ -83,6 +85,7 @@ Cada sistema tem a sua porta, a sua pasta de dados e o seu atalho. Por isso um n
   - Se for este mesmo sistema, com a mesma pasta de dados, só abre a janela.
   - Se for outro programa, passa para a próxima porta livre (4981, 4982...) e grava a escolha para as próximas vezes.
   - Se for outra cópia deste sistema, de outra pasta, ele avisa e não abre, para não misturar dois bancos de dados.
+  - Se for este mesmo sistema, mas ele não estiver respondendo, ele avisa em vez de abrir outro servidor com os mesmos dados. Isso acontece, por exemplo, quando alguém clica dentro da janela preta e deixa um texto selecionado; aperte Esc nela.
 - Antes desta versão, este sistema também usava a porta 3000, igual ao BC Fichas Control: era por isso que o `iniciar.bat` abria o outro sistema.
 - Tablets e computadores que usavam o endereço antigo, com `:3000`, precisam do endereço novo, com `:4980`. Ele aparece em **Configurações › Rede e dados**.
 
@@ -91,13 +94,17 @@ Cada sistema tem a sua porta, a sua pasta de dados e o seu atalho. Por isso um n
 **Para mudar a porta ou o jeito de abrir:**
 
 1. feche a janela preta;
-2. edite o arquivo `dados\servidor.json`, criado na primeira vez:
+2. edite o arquivo `dados\servidor.json`, criado na primeira vez, com o Bloco de Notas:
 
 ```json
-{ "porta": 4980, "janela": "aplicativo" }
+{
+  "porta": 4980,
+  "janela": "aplicativo"
+}
 ```
 
-Use `"janela": "navegador"` para abrir numa aba do navegador comum, em vez da janela própria.
+- Use `"janela": "navegador"` para abrir numa aba do navegador comum, em vez da janela própria.
+- Se o arquivo ficar com algum erro, por exemplo uma vírgula faltando, o sistema avisa na janela preta e usa a porta 4980. O arquivo não é apagado: corrija-o ou apague-o.
 
 **Geração automática:**
 

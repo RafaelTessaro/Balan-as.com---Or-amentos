@@ -61,11 +61,16 @@ COMO USAR (Windows 10 ou 11, 64 bits)
    para dentro da pasta do sistema e rode de novo.
    Se o Windows mostrar um aviso de segurança, clique em "Mais informações"
    e depois em "Executar assim mesmo".
-4. O navegador abre sozinho em http://localhost:3000.
-   Deixe a janela preta aberta enquanto usa o sistema.
+4. O sistema abre numa janela própria, em http://localhost:4980.
+   A janela preta pode ficar minimizada, mas não feche enquanto usa o sistema.
 
-Na primeira vez é criado o atalho "Orcamentos BALANCAS.COM" na Área de Trabalho.
-Tablets na mesma rede Wi-Fi acessam pelo endereço "Na rede local" mostrado na janela.
+Na primeira vez é criado o atalho "Orcamentos BALANCAS.COM" na Área de Trabalho
+e no menu Iniciar. Use sempre esse atalho para abrir o sistema.
+Tablets na mesma rede acessam pelo endereço mostrado em Configurações > Rede e dados.
+
+Este sistema usa a porta 4980 e a pasta "dados" só dele: não conflita com o
+BC Fichas Control (porta 3000) nem com outros programas. Use uma pasta
+separada para cada sistema.
 
 Os dados ficam na pasta "dados" (criada automaticamente). Faça backup dela.
 Internet só é necessária para enviar orçamentos por e-mail ou WhatsApp.
@@ -137,15 +142,20 @@ COMO USAR (Windows 10 ou 11, 64 bits)
 2. Abra a pasta extraída e dê dois cliques em "iniciar.bat".
    Se o Windows mostrar um aviso de segurança, clique em "Mais informações"
    e depois em "Executar assim mesmo".
-3. O navegador abre sozinho em http://localhost:3000.
-   Deixe a janela preta aberta enquanto usa o sistema.
+3. O sistema abre numa janela própria, em http://localhost:4980.
+   A janela preta pode ficar minimizada, mas não feche enquanto usa o sistema.
 
-Na primeira vez é criado o atalho "Orcamentos BALANCAS.COM" na Área de Trabalho.
-Tablets na mesma rede Wi-Fi acessam pelo endereço "Na rede local" mostrado na janela.
+Na primeira vez é criado o atalho "Orcamentos BALANCAS.COM" na Área de Trabalho
+e no menu Iniciar. Use sempre esse atalho para abrir o sistema.
+Tablets na mesma rede acessam pelo endereço mostrado em Configurações > Rede e dados.
+
+Este sistema usa a porta 4980 e a pasta "dados" só dele: não conflita com o
+BC Fichas Control (porta 3000) nem com outros programas. Use uma pasta
+separada para cada sistema.
 
 Os dados ficam na pasta "dados" (criada automaticamente). Faça backup dela.
-Para atualizar o sistema, extraia a versão nova por cima da pasta antiga:
-a pasta "dados" é mantida.
+Para atualizar o sistema, feche a janela preta e extraia a versão nova por
+cima da pasta antiga: a pasta "dados" é mantida.
 
 Internet só é necessária para enviar orçamentos por e-mail ou WhatsApp.
 

@@ -28,6 +28,9 @@ export function aplicarTema(pref = preferenciaTema()) {
   const raiz = document.documentElement;
   raiz.dataset.tema = resolver(pref);
   raiz.dataset.temaPreferido = pref;
+  // Cor da barra de título da janela do aplicativo (Edge/Chrome em modo app).
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = raiz.dataset.tema === 'escuro' ? '#131615' : '#f3f5f4';
   window.dispatchEvent(new CustomEvent('tema-alterado', { detail: { preferido: pref, tema: raiz.dataset.tema } }));
 }
 

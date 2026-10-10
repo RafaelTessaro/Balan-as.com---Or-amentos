@@ -13,6 +13,7 @@ arrow-left filter refresh-cw square-check sparkles circle-help clipboard-check b
 percent tag history plug battery keyboard monitor wifi file-check circle-alert circle-dashed sun moon sun-moon
 list-plus package-plus user-plus grip-vertical arrow-right shield-check stamp
 eye-off hard-hat plug-zap archive-restore hard-drive-download id-card arrow-up arrow-down braces lock at-sign image-up
+network tablet-smartphone folder-open
 `.trim().split(/\s+/);
 
 const dir = path.join(__dirname, '..', 'node_modules', 'lucide-static', 'icons');

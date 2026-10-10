@@ -1,7 +1,7 @@
 // Tela de configurações.
 //
-// Seções: Empresa, Orçamento (com papel timbrado), Checklist, Técnicos,
-// Numeração, E-mail (SMTP), WhatsApp e Backup. Uma barra fixa "Salvar"
+// Seções: Aparência, Empresa, Orçamento (com papel timbrado), Checklist,
+// Técnicos, E-mail (SMTP), WhatsApp, Rede e dados (só leitura) e Backup. Uma barra fixa "Salvar"
 // grava de uma vez todas as seções alteradas (PUT /api/config apenas com as
 // seções modificadas: listas são substituídas e objetos mesclados no servidor).
 // As imagens do papel timbrado e o backup são ações imediatas.
@@ -74,6 +74,12 @@ const SECOES = [
     texto: 'Mensagem que acompanha o orçamento enviado pelo WhatsApp.',
   },
   {
+    id: 'rede',
+    titulo: 'Rede e dados',
+    icone: 'network',
+    texto: 'Endereços para abrir o sistema em outros computadores e tablets da oficina, e a pasta onde ficam os dados.',
+  },
+  {
     id: 'backup',
     titulo: 'Backup',
     icone: 'database',
@@ -81,7 +87,7 @@ const SECOES = [
   },
 ];
 
-// Seções que correspondem a chaves da configuração (Backup não tem).
+// Seções que correspondem a chaves da configuração (Rede e Backup não têm).
 const CHAVES = ['empresa', 'orcamento', 'checklist', 'tecnicos', 'numeracao', 'email', 'whatsapp'];
 
 const VARIAVEIS = [
@@ -166,7 +172,11 @@ export async function montar(el, { query = {} } = {}) {
   definirTitulo('Configurações');
   el.innerHTML = carregandoHTML('Carregando configurações…');
 
-  let [cfg, ultimas] = await Promise.all([obterConfig(true), api.get('/ordens?limite=1').catch(() => [])]);
+  let [cfg, ultimas, ident] = await Promise.all([
+    obterConfig(true),
+    api.get('/ordens?limite=1').catch(() => []),
+    api.get('/identidade').catch(() => null),
+  ]);
   const ultimoNumero = Number(ultimas?.[0]?.numero) || 0;
 
   let original = extrair(cfg);
@@ -667,6 +677,57 @@ export async function montar(el, { query = {} } = {}) {
                 <div class="previa-whatsapp"><div class="balao" data-previa="whatsapp"></div></div>
               </div>
             </div>`,
+        })
+      );
+    },
+
+    rede() {
+      if (!ident) return `<div class="aviso">${icone('circle-alert')}<div>Não foi possível ler os dados da rede. Recarregue a página.</div></div>`;
+      const linha = ({ ic, titulo, texto, valor }) => `
+        <div class="acao-backup linha-endereco">
+          <span class="icone-redondo">${icone(ic)}</span>
+          <div class="acao-backup-texto">
+            <h4>${esc(titulo)}</h4>
+            <p>${texto}</p>
+            <code class="endereco" data-valor>${esc(valor)}</code>
+          </div>
+          <button type="button" class="btn btn-p" data-copiar="${esc(valor)}">${icone('copy')}<span>Copiar</span></button>
+        </div>`;
+      const local = `http://localhost:${ident.porta}`;
+      const naRede = ident.enderecos.length
+        ? ident.enderecos
+            .map((e) =>
+              linha({
+                ic: 'tablet-smartphone',
+                titulo: 'Em outros computadores e tablets',
+                texto: 'Digite este endereço no navegador de qualquer aparelho ligado à <b>mesma rede</b> (cabo ou Wi-Fi) deste computador.',
+                valor: e,
+              })
+            )
+            .join('')
+        : `<div class="aviso">${icone('wifi')}<div>Este computador não está conectado a uma rede. Para usar em tablets, ligue-o ao Wi-Fi ou ao cabo da oficina e abra esta tela de novo.</div></div>`;
+      return (
+        cartao({
+          icone: 'network',
+          titulo: 'Endereços do sistema',
+          texto: `Este sistema usa a porta <b>${ident.porta}</b>, só dele. Os outros programas da empresa (como o BC Fichas Control) usam portas próprias, por isso um não abre no lugar do outro.`,
+          corpo: `
+            <div class="acoes-backup">
+              ${linha({
+                ic: 'monitor',
+                titulo: 'No computador do sistema',
+                texto: 'O atalho <b>Orcamentos BALANCAS.COM</b> na Área de Trabalho abre este endereço numa janela própria.',
+                valor: local,
+              })}
+              ${naRede}
+            </div>`,
+        }) +
+        cartao({
+          icone: 'folder-open',
+          titulo: 'Pasta dos dados',
+          texto: 'Banco de dados, cópias automáticas e imagens do papel timbrado. Cada cópia do sistema usa só a pasta <code>dados</code> que fica ao lado dela.',
+          corpo: `<code class="endereco endereco-pasta">${esc(ident.pasta)}</code>`,
+          rodape: `<span class="texto-suave">Versão ${esc(ident.versao)}</span>`,
         })
       );
     },
@@ -1606,7 +1667,27 @@ export async function montar(el, { query = {} } = {}) {
       $('[data-arquivo-backup]', areaSecao)?.click();
       return;
     }
+    if ((b = alvo('[data-copiar]'))) return copiar(b.dataset.copiar, b.closest('.linha-endereco'));
   });
+
+  // Copia o endereço. Sem acesso à área de transferência (página aberta pelo
+  // IP da rede, sem HTTPS), seleciona o texto para o usuário copiar com Ctrl+C.
+  async function copiar(texto, linha) {
+    try {
+      await navigator.clipboard.writeText(texto);
+      toast('Endereço copiado.', 'sucesso');
+    } catch {
+      const alvoTexto = linha && $('[data-valor]', linha);
+      if (alvoTexto) {
+        const r = document.createRange();
+        r.selectNodeContents(alvoTexto);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+      toast('Endereço selecionado: pressione Ctrl+C para copiar.', 'info');
+    }
+  }
 
   // Ctrl+S / Cmd+S salva.
   const atalhos = (e) => {

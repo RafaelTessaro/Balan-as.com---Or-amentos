@@ -42,11 +42,17 @@ O pacote já traz:
 
 Não precisa instalar nem baixar mais nada.
 
-1. Clique com o botão direito no `.zip` e escolha **"Extrair tudo..."**. Use uma pasta fixa, por exemplo `C:\BalancasOrcamentos`.
+1. Clique com o botão direito no `.zip` e escolha **"Extrair tudo..."**. Use uma pasta fixa e só deste sistema, por exemplo `C:\BalancasOrcamentos`.
 2. Dê dois cliques em **`iniciar.bat`**. Se o Windows mostrar um aviso de segurança, clique em "Mais informações" e depois em "Executar assim mesmo".
-3. O navegador abre sozinho em **http://localhost:3000**. Deixe a janela preta aberta enquanto usa o sistema.
+3. O sistema abre numa **janela própria**, como um aplicativo, sem abas nem barra de endereço. O endereço é **http://localhost:4980**.
+   - A janela preta é o servidor do sistema: ela pode ficar minimizada, mas não pode ser fechada enquanto o sistema estiver em uso.
 
-Na primeira vez, o atalho **"Orcamentos BALANCAS.COM"** é criado na Área de Trabalho.
+Na primeira vez, o atalho **"Orcamentos BALANCAS.COM"** é criado na Área de Trabalho e no menu Iniciar. Use sempre esse atalho:
+
+- se o sistema estiver fechado, ele o inicia com a janela preta já minimizada e abre a janela do sistema;
+- se já estiver aberto, só abre a janela de novo.
+
+A janela própria usa o navegador padrão do computador quando ele é o Chrome, o Edge ou o Brave, para o WhatsApp Web abrir na conta de sempre. Com outro navegador padrão, ela usa o Edge, que já vem no Windows.
 
 **Versão em 2 partes:**
 
@@ -57,7 +63,41 @@ Na primeira vez, o atalho **"Orcamentos BALANCAS.COM"** é criado na Área de Tr
 Requisitos e atualização:
 
 - Funciona no Windows 10 e 11 de 64 bits.
-- Para atualizar, extraia a versão nova por cima da pasta antiga. A pasta `dados` é mantida.
+- Para atualizar:
+  1. feche a janela preta do sistema;
+  2. extraia a versão nova por cima da pasta antiga. A pasta `dados` é mantida.
+
+### Junto com outros sistemas da empresa (BC Fichas Control e outros)
+
+Cada sistema tem a sua porta, a sua pasta de dados e o seu atalho. Por isso um nunca abre no lugar do outro.
+
+| | Este sistema | BC Fichas Control |
+|---|---|---|
+| Endereço | `http://localhost:4980` | `http://localhost:3000` (padrão dele) |
+| Pasta dos dados | `dados`, dentro da pasta deste sistema | a pasta dele |
+| Abre por | atalho "Orcamentos BALANCAS.COM" | o atalho dele |
+
+**Como o sistema evita conflito:**
+
+- Ao iniciar, se a porta estiver ocupada, o sistema pergunta ao programa que está nela quem ele é.
+  - Se for este mesmo sistema, com a mesma pasta de dados, só abre a janela.
+  - Se for outro programa, passa para a próxima porta livre (4981, 4982...) e grava a escolha para as próximas vezes.
+  - Se for outra cópia deste sistema, de outra pasta, ele avisa e não abre, para não misturar dois bancos de dados.
+- Antes desta versão, este sistema também usava a porta 3000, igual ao BC Fichas Control: era por isso que o `iniciar.bat` abria o outro sistema.
+- Tablets e computadores que usavam o endereço antigo, com `:3000`, precisam do endereço novo, com `:4980`. Ele aparece em **Configurações › Rede e dados**.
+
+**Use pastas separadas para cada sistema**, por exemplo `C:\BalancasOrcamentos` e `C:\BC-Fichas-Control`. Não extraia um sistema dentro da pasta do outro.
+
+**Para mudar a porta ou o jeito de abrir:**
+
+1. feche a janela preta;
+2. edite o arquivo `dados\servidor.json`, criado na primeira vez:
+
+```json
+{ "porta": 4980, "janela": "aplicativo" }
+```
+
+Use `"janela": "navegador"` para abrir numa aba do navegador comum, em vez da janela própria.
 
 **Geração automática:**
 
@@ -82,7 +122,9 @@ Na primeira vez, os componentes são baixados da internet.
 
 ### Usar em tablets e em outros computadores da oficina
 
-Ao iniciar, a janela do sistema mostra um endereço do tipo `http://192.168.0.10:3000` ("Na rede local"). Abra esse endereço no navegador do tablet ou de outro computador **conectado à mesma rede Wi-Fi**. Todos usam o mesmo banco de dados.
+1. Abra **Configurações › Rede e dados**. A tela mostra o endereço do sistema na rede, do tipo `http://192.168.0.10:4980`. Ele também aparece na janela preta, em "Na rede local".
+2. Abra esse endereço no navegador do tablet ou de outro computador **conectado à mesma rede** (Wi-Fi ou cabo). Todos usam o mesmo banco de dados.
+3. No tablet, use "Adicionar à tela inicial" para ter um ícone do sistema.
 
 Se o Windows perguntar sobre o Firewall na primeira vez, permita o acesso em **redes privadas**.
 
@@ -104,7 +146,7 @@ Se o Windows perguntar sobre o Firewall na primeira vez, permita o acesso em **r
 | **Clientes** | Pessoas físicas e jurídicas, com consulta automática do CNPJ (também dá para cadastrar de dentro da OS) |
 | **Serviços / Peças** | Catálogo com valores. Peças mostram a data da última atualização de preço |
 | **Checklist em branco** | Folha A4 para imprimir e preencher à mão |
-| **Configurações** | Dados da empresa, textos do orçamento, papel timbrado, itens do checklist, técnicos, e-mail, WhatsApp e backup |
+| **Configurações** | Dados da empresa, textos do orçamento, papel timbrado, itens do checklist, técnicos, e-mail, WhatsApp, endereços na rede e backup |
 
 **Dentro da OS** tudo é salvo automaticamente. A tela é dividida em 5 seções:
 1. Identificação do equipamento
@@ -143,7 +185,7 @@ Depois é só arrastar o PDF para a conversa. No tablet/celular, quando o navega
 
 ## Onde ficam os dados e como fazer backup
 
-- Todos os dados ficam na pasta **`dados`**, dentro da pasta do sistema, no arquivo `dados/balancas.db`.
+- Todos os dados ficam na pasta **`dados`**, dentro da pasta do sistema, no arquivo `dados/balancas.db`. A porta escolhida fica em `dados/servidor.json`.
 - **A cada vez que o sistema é iniciado**, uma cópia automática é salva em `dados/backups` (o sistema guarda as 20 mais recentes).
 - Em **Configurações › Backup** dá para baixar um backup completo (`.json`) e restaurá-lo em outro computador.
 
@@ -188,7 +230,9 @@ Para trocar de computador:
   - fonte Inter (OFL), servida localmente para funcionar sem internet.
 
 ```
-server.js                 inicia o servidor, backup automático, abre o navegador
+server.js                 inicia o servidor, backup automático, abre a janela
+src/instancia.js          porta própria, identidade (/api/identidade) e conflito com outros sistemas
+src/janela.js             abre a janela de aplicativo (Edge/Chrome/Brave em modo --app)
 src/db.js                 banco, migrações e configurações
 src/ordens.js             regras das ordens de serviço (itens, totais, status, histórico)
 src/cadastros.js          clientes, serviços e peças
@@ -206,7 +250,7 @@ Comandos:
 
 ```bash
 npm install          # instala dependências
-npm start            # http://localhost:3000
+npm start            # http://localhost:4980
 npm run dev          # reinicia sozinho ao alterar arquivos
 ```
 
@@ -214,7 +258,8 @@ Variáveis de ambiente opcionais:
 
 | Variável | Para que serve |
 |---|---|
-| `PORT` | porta do servidor (padrão `3000`) |
+| `PORT` | porta fixa do servidor. Sem ela, usa a de `dados/servidor.json` (padrão `4980`) e passa para a próxima livre se outro programa estiver na porta |
 | `HOST` | interface de rede (padrão `0.0.0.0`) |
 | `DATA_DIR` | pasta dos dados (padrão `./dados`) |
-| `NAO_ABRIR_NAVEGADOR=1` | não abre o navegador ao iniciar |
+| `NAO_ABRIR_NAVEGADOR=1` | não abre a janela ao iniciar |
+| `JANELA=navegador` | abre numa aba do navegador comum em vez da janela própria |

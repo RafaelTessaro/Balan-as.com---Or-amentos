@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title BALANÇAS.COM - Checklist e Orçamentos
+title Orçamentos BALANÇAS.COM - iniciando...
 cd /d "%~dp0"
 
 rem -------------------------------------------------------------------
@@ -34,22 +34,32 @@ call npm install --omit=dev --no-audit --no-fund
 if errorlevel 1 goto falha_instalacao
 
 :atalho
-rem Na primeira vez, cria um atalho na Área de Trabalho (uma vez só).
-if exist "dados\.atalho-criado" goto iniciar
+rem Atalho "Orcamentos BALANCAS.COM" na Área de Trabalho e no menu Iniciar.
+rem Ele abre o sistema numa janela própria e deixa esta janela preta minimizada.
+rem É refeito só se a pasta do sistema mudar de lugar (a marca guarda a pasta).
+set "ATALHO_MARCA="
+if exist "dados\.atalho-v2" set /p ATALHO_MARCA=<"dados\.atalho-v2"
+if /i "%ATALHO_MARCA%"=="%~dp0" goto iniciar
 if not exist "dados" mkdir "dados"
+if exist "dados\.atalho-criado" del "dados\.atalho-criado" >nul 2>nul
 set "ATALHO_ALVO=%~dp0iniciar.bat"
 set "ATALHO_PASTA=%~dp0"
 set "ATALHO_ICONE=%~dp0public\img\icone.ico"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$w = New-Object -ComObject WScript.Shell; $a = $w.CreateShortcut([Environment]::GetFolderPath('Desktop') + '\Orcamentos BALANCAS.COM.lnk'); $a.TargetPath = $env:ATALHO_ALVO; $a.WorkingDirectory = $env:ATALHO_PASTA; $a.IconLocation = $env:ATALHO_ICONE; $a.Description = 'Checklist tecnico e orcamentos'; $a.Save()" >nul 2>nul
-if not errorlevel 1 echo   Atalho "Orcamentos BALANCAS.COM" criado na Área de Trabalho.
-echo.> "dados\.atalho-criado"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $w = New-Object -ComObject WScript.Shell; foreach ($d in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) { if (-not $d) { continue }; $a = $w.CreateShortcut((Join-Path $d 'Orcamentos BALANCAS.COM.lnk')); $a.TargetPath = $env:ATALHO_ALVO; $a.WorkingDirectory = $env:ATALHO_PASTA; $a.IconLocation = $env:ATALHO_ICONE + ',0'; $a.Description = 'Checklist tecnico e orcamentos - BALANCAS.COM'; $a.WindowStyle = 7; $a.Save() }; [IO.File]::WriteAllText((Join-Path $env:ATALHO_PASTA 'dados\.atalho-v2'), $env:ATALHO_PASTA)" >nul 2>nul
+if not errorlevel 1 echo   Atalho "Orcamentos BALANCAS.COM" criado na Área de Trabalho e no menu Iniciar.
 
 :iniciar
 rem Usa o proxy do sistema (se houver) na consulta de CNPJ.
 set "NODE_USE_ENV_PROXY=1"
 "%NODE%" --no-warnings server.js
+rem 0 = encerrado normalmente, ou o sistema já estava aberto e só a janela foi aberta.
+if not errorlevel 1 exit /b 0
+rem Erro: a janela pode estar minimizada (atalho), então avisa com uma mensagem na tela.
+set "AVISO_TITULO=Orçamentos BALANÇAS.COM"
+set "AVISO_TEXTO=O sistema não conseguiu abrir. O motivo aparece na janela preta, que fica na barra de tarefas."
+powershell -NoProfile -Command "[void](New-Object -ComObject WScript.Shell).Popup($env:AVISO_TEXTO, 0, $env:AVISO_TITULO, 48 + 4096)" >nul 2>nul
 pause
-exit /b 0
+exit /b 1
 
 :parar
 pause

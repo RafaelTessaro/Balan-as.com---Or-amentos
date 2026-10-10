@@ -1285,6 +1285,24 @@ mark.var-erro {
   color: var(--perigo);
 }
 
+/* Rede e dados: endereços para copiar */
+.tela-config code.endereco {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: var(--fs-m);
+  font-weight: 600;
+  color: var(--texto);
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+.tela-config code.endereco-pasta {
+  display: block;
+  margin-top: 0;
+  font-size: var(--fs-s);
+  font-weight: 500;
+}
+
 /* Barra de salvar (aparece quando há alterações) */
 .barra-salvar {
   position: sticky;

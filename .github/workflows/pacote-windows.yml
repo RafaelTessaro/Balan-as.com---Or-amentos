@@ -44,9 +44,12 @@ jobs:
           **Como usar**
           1. Baixe `BalancasOrcamentos-windows.zip` (abaixo, em *Assets*).
           2. Clique com o botão direito no arquivo e escolha **Extrair tudo...** para uma pasta fixa (ex.: `C:\BalancasOrcamentos`).
-          3. Dê dois cliques em `iniciar.bat`. O navegador abre em http://localhost:3000.
+          3. Dê dois cliques em `iniciar.bat`. O sistema abre numa janela própria, em http://localhost:4980.
 
-          Para atualizar, extraia a versão nova por cima da pasta antiga: a pasta `dados` é mantida.
+          Na primeira vez é criado o atalho **Orcamentos BALANCAS.COM** na Área de Trabalho e no menu Iniciar.
+          O sistema usa a porta 4980 e a pasta `dados` só dele, sem conflito com o BC Fichas Control (porta 3000).
+
+          Para atualizar, feche a janela preta e extraia a versão nova por cima da pasta antiga: a pasta `dados` é mantida.
           NOTAS
           gh release create pacote-windows dist/BalancasOrcamentos-windows.zip \
             --target "$GITHUB_SHA" \

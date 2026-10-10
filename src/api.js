@@ -1,7 +1,7 @@
 // API REST usada pela interface (tudo em /api).
 
 const express = require('express');
-const { db, lerConfig, salvarConfig, transacao } = require('./db');
+const { db, DATA_DIR, lerConfig, salvarConfig, transacao } = require('./db');
 const ordens = require('./ordens');
 const cadastros = require('./cadastros');
 const imagens = require('./imagens');
@@ -9,6 +9,7 @@ const email = require('./email');
 const modelos = require('./modelos');
 const { gerarOrcamentoPdf } = require('./pdf/orcamento');
 const { consultarCNPJ } = require('./cnpj');
+const instancia = require('./instancia');
 
 const api = express.Router();
 
@@ -16,6 +17,16 @@ const api = express.Router();
 const rota = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 const naoEncontrado = (res, msg = 'Registro não encontrado.') => res.status(404).json({ erro: msg });
+
+// ---------------------------------------------------------------------------
+// Identidade: diz que este é o sistema de orçamentos (e qual pasta de dados usa).
+// Ao iniciar, o sistema pergunta isso a quem estiver na porta, para nunca abrir
+// outro programa da rede (como o BC Fichas Control) no lugar dele.
+// ---------------------------------------------------------------------------
+api.get('/identidade', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(instancia.identidade(DATA_DIR, req.socket.localPort));
+});
 
 // ---------------------------------------------------------------------------
 // Configurações

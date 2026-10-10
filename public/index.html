@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <title>BALANÇAS.COM — Checklist e Orçamentos</title>
+    <meta name="application-name" content="Orçamentos BALANÇAS.COM" />
+    <meta name="theme-color" content="#f3f5f4" />
     <script>
       // Aplica o tema salvo antes de desenhar a página (evita piscar).
       (function () {
@@ -13,9 +15,13 @@
         var escuro = t === 'escuro' || (t === 'sistema' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.dataset.tema = escuro ? 'escuro' : 'claro';
         document.documentElement.dataset.temaPreferido = t;
+        // Cor da barra de título da janela do aplicativo.
+        document.querySelector('meta[name="theme-color"]').content = escuro ? '#131615' : '#f3f5f4';
       })();
     </script>
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/img/logo-simbolo.png" />
+    <link rel="apple-touch-icon" href="/img/apple-touch-icon.png" />
     <link rel="stylesheet" href="/css/app.css" />
     <link rel="stylesheet" href="/css/telas.css" />
     <link rel="stylesheet" href="/css/cadastros.css" />

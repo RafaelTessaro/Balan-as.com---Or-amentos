@@ -13,6 +13,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const http = require('http');
+const { execFile } = require('child_process');
 
 const ID_APP = 'balancas-orcamentos';
 const NOME_APP = 'Orçamentos BALANÇAS.COM';
@@ -167,14 +168,51 @@ function liberarProcesso(pastaDados) {
   }
 }
 
-// Este sistema (mesma pasta) está rodando nesta porta, mas não respondeu?
-function processoDestaPasta(pastaDados, porta) {
+function lerRegistro(pastaDados) {
   try {
     const r = JSON.parse(fs.readFileSync(arquivoPid(pastaDados), 'utf8'));
-    return r.porta === porta && Number.isInteger(r.pid) && r.pid !== process.pid && processoVivo(r.pid);
+    if (Number.isInteger(r.pid) && r.pid !== process.pid && portaValida(r.porta) && processoVivo(r.pid)) return r;
   } catch {
-    return false;
+    /* sem registro */
   }
+  return null;
+}
+
+// PID de quem escuta na porta (Windows, pelo netstat; as colunas não mudam com o
+// idioma: Proto, Endereço local, Endereço externo, Estado, PID). null se não souber.
+function donoDaPorta(porta) {
+  return new Promise((resolver) => {
+    execFile('netstat', ['-ano', '-p', 'TCP'], { windowsHide: true, timeout: 5000, maxBuffer: 8 * 1024 * 1024 }, (erro, saida) => {
+      if (erro) return resolver(null);
+      for (const linha of String(saida).split(/\r?\n/)) {
+        const c = linha.trim().split(/\s+/);
+        if (c.length >= 5 && /^TCP/i.test(c[0]) && c[1].endsWith(`:${porta}`) && /:0$/.test(c[2])) {
+          return resolver(Number(c[c.length - 1]));
+        }
+      }
+      resolver(null);
+    });
+  });
+}
+
+// O processo registrado em servidor.pid é mesmo este sistema? (o Windows
+// reaproveita números de processo depois de um desligamento sem encerrar).
+async function registroConfere(reg) {
+  if (process.platform === 'win32') {
+    const dono = await donoDaPorta(reg.porta);
+    return dono === null ? false : dono === reg.pid;
+  }
+  try {
+    return fs.readFileSync(`/proc/${reg.pid}/cmdline`, 'utf8').includes('node');
+  } catch {
+    return true; // sem /proc (macOS): confia no processo vivo
+  }
+}
+
+// Este sistema (mesma pasta) está rodando nesta porta, mas não respondeu?
+async function processoDestaPasta(pastaDados, porta) {
+  const reg = lerRegistro(pastaDados);
+  return Boolean(reg && reg.porta === porta && (await registroConfere(reg)));
 }
 
 function escutar(servidor, porta, host) {
@@ -219,6 +257,14 @@ async function iniciarServidor(servidor, { host, pastaDados, portaAmbiente }) {
   const consulta = !host || host === '0.0.0.0' || host === '::' ? '127.0.0.1' : host;
   let ocupada = null;
 
+  // Já está aberto em outra porta (ex.: servidor.json com erro e a preferida estava
+  // ocupada da outra vez)? O registro do processo diz onde: confirma pela identidade.
+  const reg = lerRegistro(pastaDados);
+  if (reg && reg.porta !== preferida) {
+    const quem = await identificar(consulta, reg.porta);
+    if (quem && mesmaPasta(quem.pasta, minha)) return { situacao: 'ja-aberto', porta: reg.porta };
+  }
+
   for (let i = 0, porta = preferida; i < TENTATIVAS && porta <= 65535; i++, porta++) {
     try {
       await escutar(servidor, porta, host);
@@ -235,7 +281,7 @@ async function iniciarServidor(servidor, { host, pastaDados, portaAmbiente }) {
           if (mesmaPasta(quem.pasta, minha)) return { situacao: 'ja-aberto', porta };
           return { situacao: 'outra-copia', porta, pasta: quem.pasta };
         }
-        if (processoDestaPasta(pastaDados, porta)) return { situacao: 'sem-resposta', porta };
+        if (await processoDestaPasta(pastaDados, porta)) return { situacao: 'sem-resposta', porta };
       }
       if (fixa) return { situacao: 'porta-fixa-ocupada', porta };
       if (ocupada === null) ocupada = porta;

@@ -83,7 +83,9 @@ async function principal() {
     return sair(1);
   }
   const r = await instancia.iniciarServidor(servidor, { host: HOST, pastaDados: DATA_DIR, portaAmbiente });
-  const local = `http://localhost:${r.porta}`;
+  // Escutando em todas as interfaces, abre por "localhost"; com HOST fixo, por ele.
+  const hostJanela = HOST === '0.0.0.0' || HOST === '::' ? 'localhost' : HOST.includes(':') ? `[${HOST}]` : HOST;
+  const local = `http://${hostJanela}:${r.porta}`;
 
   if (r.situacao === 'ja-aberto') {
     console.log(`\n  O sistema já está aberto em ${local}. Abrindo a janela...\n`);

@@ -42,7 +42,8 @@ rem  Ele abre o sistema numa janela própria e deixa esta janela preta minimizad
 rem  Cada usuário do Windows guarda qual pasta do sistema rodou por último
 rem  (na pasta LOCALAPPDATA dele); os atalhos só são refeitos quando ela muda.
 rem  Uma cópia nova e ainda sem dados não toma o atalho de outra pasta que
-rem  já tem os dados (por exemplo, uma atualização extraída em pasta errada).
+rem  já tem os dados (por exemplo, uma atualização extraída em pasta errada):
+rem  nesse caso nada é criado e esta cópia não é aberta.
 rem -------------------------------------------------------------------
 if not defined LOCALAPPDATA set "LOCALAPPDATA=%USERPROFILE%\AppData\Local"
 set "ATALHO_MARCA_ARQ=%LOCALAPPDATA%\Orcamentos BALANCAS.COM\ultima-pasta.txt"
@@ -54,17 +55,24 @@ if exist "dados\.atalho-v2" del "dados\.atalho-v2" >nul 2>nul
 set "ATALHO_ALVO=%~dp0iniciar.bat"
 set "ATALHO_PASTA=%~dp0"
 set "ATALHO_ICONE=%~dp0public\img\icone.ico"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $w = New-Object -ComObject WScript.Shell; $semDados = -not (Test-Path -LiteralPath (Join-Path $env:ATALHO_PASTA 'dados\balancas.db')); $mantido = $false; foreach ($d in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) { if (-not $d) { continue }; $l = Join-Path $d 'Orcamentos BALANCAS.COM.lnk'; if ($semDados -and (Test-Path -LiteralPath $l)) { $t = $w.CreateShortcut($l).TargetPath; if ($t -and ($t -ne $env:ATALHO_ALVO) -and (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $t) 'dados\balancas.db'))) { $mantido = $true; continue } }; $a = $w.CreateShortcut($l); $a.TargetPath = $env:ATALHO_ALVO; $a.WorkingDirectory = $env:ATALHO_PASTA; $a.IconLocation = $env:ATALHO_ICONE + ',0'; $a.Description = 'Checklist tecnico e orcamentos - BALANCAS.COM'; $a.WindowStyle = 7; $a.Save() }; [void][IO.Directory]::CreateDirectory((Split-Path -Parent $env:ATALHO_MARCA_ARQ)); [IO.File]::WriteAllText($env:ATALHO_MARCA_ARQ, $env:ATALHO_PASTA); if ($mantido) { exit 2 }" >nul 2>nul
-if errorlevel 2 goto atalho_mantido
-if not errorlevel 1 echo   Atalho "Orcamentos BALANCAS.COM" criado na Área de Trabalho e no menu Iniciar.
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $w = New-Object -ComObject WScript.Shell; $locais = @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs')) | Where-Object { $_ }; if (-not (Test-Path -LiteralPath (Join-Path $env:ATALHO_PASTA 'dados\balancas.db'))) { foreach ($d in $locais) { $l = Join-Path $d 'Orcamentos BALANCAS.COM.lnk'; if (Test-Path -LiteralPath $l) { $t = $w.CreateShortcut($l).TargetPath; if ($t -and ($t -ne $env:ATALHO_ALVO) -and (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $t) 'dados\balancas.db'))) { exit 2 } } } }; foreach ($d in $locais) { $a = $w.CreateShortcut((Join-Path $d 'Orcamentos BALANCAS.COM.lnk')); $a.TargetPath = $env:ATALHO_ALVO; $a.WorkingDirectory = $env:ATALHO_PASTA; $a.IconLocation = $env:ATALHO_ICONE + ',0'; $a.Description = 'Checklist tecnico e orcamentos - BALANCAS.COM'; $a.WindowStyle = 7; $a.Save() }; [void][IO.Directory]::CreateDirectory((Split-Path -Parent $env:ATALHO_MARCA_ARQ)); [IO.File]::WriteAllText($env:ATALHO_MARCA_ARQ, $env:ATALHO_PASTA)" >nul 2>nul
+if "%ERRORLEVEL%"=="2" goto outra_pasta_com_dados
+if "%ERRORLEVEL%"=="0" echo   Atalho "Orcamentos BALANCAS.COM" criado na Área de Trabalho e no menu Iniciar.
 goto iniciar
 
-:atalho_mantido
+:outra_pasta_com_dados
 echo.
-echo   O atalho "Orcamentos BALANCAS.COM" continua abrindo a outra pasta do
-echo   sistema, que já tem os dados. Esta pasta ainda não tem dados.
-echo   Para atualizar o sistema, extraia a versão nova por cima da pasta antiga.
+echo   Esta pasta do sistema ainda não tem dados, e o atalho "Orcamentos BALANCAS.COM"
+echo   abre outra pasta, que já tem os dados. Para não dividir os dados em dois,
+echo   esta cópia não foi aberta.
 echo.
+echo   - Para abrir o sistema, use o atalho "Orcamentos BALANCAS.COM".
+echo   - Para atualizar, feche o sistema e extraia a versão nova por cima da pasta antiga.
+echo   - Para usar mesmo esta pasta nova, vazia, apague os atalhos "Orcamentos BALANCAS.COM"
+echo     da Área de Trabalho e do menu Iniciar e abra este iniciar.bat de novo.
+echo.
+set "AVISO_TEXTO=Esta pasta do sistema não tem dados: use o atalho Orcamentos BALANCAS.COM. Os detalhes estão na janela preta."
+goto parar
 
 :iniciar
 rem Usa o proxy do sistema (se houver) na consulta de CNPJ.

@@ -52,7 +52,12 @@ Na primeira vez, o atalho **"Orcamentos BALANCAS.COM"** é criado na Área de Tr
 - se o sistema estiver fechado, ele o inicia com a janela preta já minimizada e abre a janela do sistema;
 - se já estiver aberto, só abre a janela de novo.
 
-O atalho aponta para a pasta do sistema que foi aberta por último. Uma cópia nova, ainda sem dados (por exemplo, uma atualização extraída na pasta errada), não toma o atalho de uma pasta que já tem os dados.
+O atalho aponta para a pasta do sistema que foi aberta por último.
+
+Uma cópia nova, ainda sem dados, não toma o atalho de uma pasta que já tem os dados. Isso acontece, por exemplo, com uma atualização extraída na pasta errada. Essa cópia avisa e não abre, para os dados não ficarem divididos em dois bancos. Para usar mesmo uma pasta nova e vazia:
+
+1. apague os atalhos "Orcamentos BALANCAS.COM" da Área de Trabalho e do menu Iniciar;
+2. abra o `iniciar.bat` dessa pasta.
 
 A janela própria usa o navegador padrão do computador quando ele é o Chrome, o Edge ou o Brave, para o WhatsApp Web abrir na conta de sempre. Com outro navegador padrão, ela usa o Edge, que já vem no Windows.
 

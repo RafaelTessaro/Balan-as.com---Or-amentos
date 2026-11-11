@@ -258,6 +258,26 @@ public/imprimir/          checklist A4 para impressão
 public/css/               design system (app.css) e estilos das telas
 ```
 
+### Versão de teste dentro do Claude
+
+A pasta `artifact/` monta uma versão do sistema que roda inteira no navegador. Ela serve para testar dentro do Claude, como uma página (Artifact):
+
+- usa a mesma tela (`public/`) e o mesmo servidor (`src/`);
+- o servidor roda no próprio navegador, e o `esbuild` troca só o que depende do computador:
+  - o banco SQLite vira o `sql.js`;
+  - as rotas do Express são atendidas sem rede;
+  - os arquivos ficam na memória;
+  - o PDF usa o pdfmake para navegador, e o `pdf.js` o mostra na tela;
+- os dados ficam no IndexedDB do navegador;
+- a consulta de CNPJ, o envio por e-mail e a impressão não funcionam dentro do Claude.
+
+```bash
+npm install          # inclui as dependências de desenvolvimento (esbuild, sql.js, pdf.js...)
+npm run artifact     # gera dist/artifact/ (pagina.html + arquivos.json com os demais arquivos)
+```
+
+A pasta `artifact/` não entra no pacote para Windows.
+
 Comandos:
 
 ```bash

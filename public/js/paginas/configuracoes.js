@@ -683,6 +683,10 @@ export async function montar(el, { query = {} } = {}) {
 
     rede() {
       if (!ident) return `<div class="aviso">${icone('circle-alert')}<div>Não foi possível ler os dados da rede. Recarregue a página.</div></div>`;
+      // Versão de teste dentro do Claude (artifact/): sem porta, rede nem pasta.
+      if (ident.teste) {
+        return `<div class="aviso aviso-info">${icone('info')}<div>Esta é a <b>versão de teste dentro do Claude</b>: o sistema roda neste navegador e os dados ficam guardados só aqui. Os endereços para os tablets e a pasta dos dados aparecem nesta tela no sistema instalado no computador.</div></div>`;
+      }
       const linha = ({ ic, titulo, texto, valor }) => `
         <div class="acao-backup linha-endereco">
           <span class="icone-redondo">${icone(ic)}</span>
